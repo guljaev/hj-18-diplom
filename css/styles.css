@@ -689,7 +689,10 @@ body {
   display: none;
 }
 
-.menu[data-state="initial"] > .menu__item.drag, .menu[data-state="initial"] > .menu__item.new, .menu[data-state="initial"] > .menu__item.burger {
+/* .menu[data-state="initial"] > .menu__item.drag, .menu[data-state="initial"] > .menu__item.new, .menu[data-state="initial"] > .menu__item.burger {
+  display: inline-block;
+} */
+.menu[data-state="initial"] > .menu__item.drag, .menu[data-state="initial"] > .menu__item.new {
   display: inline-block;
 }
 
@@ -703,7 +706,10 @@ body {
   display: inline-block;
 }
 
-.menu[data-state="default"] > .tools {
+/* .menu[data-state="default"] > .tools {
+  display: none;
+} */
+.menu[data-state="default"] > .tool {
   display: none;
 }
 

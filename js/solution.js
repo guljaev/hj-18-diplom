@@ -11,6 +11,8 @@ const modeHTMLElements = Array.from( menu.querySelectorAll('.mode') );
 let picID;
 let shownComments = {};
 
+
+// преобразование timestamp в строку необходимого формата для отображения времени
 function getDate(timestamp) {
     const options = {
       day: 'numeric',
@@ -22,12 +24,11 @@ function getDate(timestamp) {
     };
   
     const date = new Date(timestamp);
-    let dateStr = date.toLocaleString(options);
+    const dateStr = date.toLocaleString(options);
     return dateStr.slice(0, 6) + dateStr.slice(8, 10) + dateStr.slice(11);
 }
 
 // dragability
-
 let movedPiece = null;
 let shiftX = 0;
 let shiftY = 0;
@@ -91,6 +92,23 @@ function throttle(callback) {
     };
 }
 
+// ~~~~~~~~~~~~~~~~~~~~ Показывать/не покаазывать комментарии ~~~~~~~~~~~~~~~~~~~
+wrap.querySelector('#comments-on').addEventListener('change', checkCommentsShow);
+wrap.querySelector('#comments-off').addEventListener('change', checkCommentsShow);
+
+function checkCommentsShow() {
+    if (wrap.querySelector('#comments-on').checked) {
+        Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
+            form.style.display = '';
+        });
+        // console.log('comments on');
+    } else {
+        Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
+            form.style.display = 'none';
+        });
+        // console.log('comments off');
+    }
+}
 
 // ~~~~~~~~~~~~~~Состояние "Публикация" (по умолчанию)~~~~~~~~~~~~~~~
 
@@ -209,7 +227,7 @@ function publishImage(file) {
     });
 }
 
-// переключение режимов (вид меню)
+// ~~~~~~~~ переключение режимов (вид меню) ~~~~~~~~~
 
 burger.addEventListener('click', () => {
     menu.dataset.state = 'default';
@@ -232,7 +250,7 @@ menu.querySelector('input.menu_copy').addEventListener('click', () => {
     document.execCommand('copy');
 });
 
-// ~~~~~~~~~~~~~~режим комментирование~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~режим "Комментирование"~~~~~~~~~~~~~~~
 
 function createBlankForm() {
     const newForm = document.createElement('form');
@@ -259,8 +277,9 @@ function createBlankForm() {
 
 // создание нового комментария на холсте
 wrap.querySelector('.current-image').addEventListener('click', (event) => {
-    // проверяем, что включен режим "Комментирование"
-    if (comments.dataset.state !== 'selected') return;
+    // проверяем, что включен режим "Комментирование" и стоит галочка "Показывать комментарии"
+    if (comments.dataset.state !== 'selected' || !wrap.querySelector('#comments-on').checked) return;
+
     const newComment = createBlankForm();
     newComment.querySelector('.comments__marker-checkbox').checked = true;
     wrap.appendChild(newComment);
@@ -341,24 +360,27 @@ function updateComments(newComments) {
 
         // если формы с заданными координатами пока нет на холсте, создаем эту форму и добавляем в нее сообщение
         if (needCreateNewForm) {
-        const newForm = createBlankForm();
-        newForm.dataset.left = newComments[id].left;
-        newForm.dataset.top = newComments[id].top;
+            const newForm = createBlankForm();
+            newForm.dataset.left = newComments[id].left;
+            newForm.dataset.top = newComments[id].top;
+            
+            const coordX = newComments[id].left + wrap.querySelector('.current-image').getBoundingClientRect().left + window.pageXOffset;
+            const coordY = newComments[id].top + wrap.querySelector('.current-image').getBoundingClientRect().top + window.pageYOffset;
+            newForm.style.cssText = `
+                top: ${coordY}px;
+                left: ${coordX}px;
+            `;
+            addMsgToForm(newComments[id], newForm);
+            wrap.appendChild(newForm);
 
-        const coordX = newComments[id].left + wrap.querySelector('.current-image').getBoundingClientRect().left + window.pageXOffset;
-        const coordY = newComments[id].top + wrap.querySelector('.current-image').getBoundingClientRect().top + window.pageYOffset;
-        newForm.style.cssText = `
-            top: ${coordY}px;
-            left: ${coordX}px;
-        `;
-        addMsgToForm(newComments[id], newForm);
-        wrap.appendChild(newForm);
+            if (!wrap.querySelector('#comments-on').checked) {
+                newForm.style.display = 'none';
+            }
         }
     });
 }
 
 // добавляем новое сообщение в форму, так чтобы все сообщения внутри формы шли по порядку возрастания data-timestamp
-
 function addMsgToForm(newMsg, form) {
     let timestamp = 9999999999999;
     let theNearestLowerDiv = form.querySelector('.loader').parentElement;
@@ -424,3 +446,4 @@ function insertWSComment(wsComment) {
 
 // };
 // console.log(testComments);
+

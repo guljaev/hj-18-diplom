@@ -10,6 +10,7 @@ const share = menu.querySelector('.share');
 const modeHTMLElements = Array.from( menu.querySelectorAll('.mode') );
 let picID;
 let shownComments = {};
+const canvas = document.createElement('canvas');
 
 
 // преобразование timestamp в строку необходимого формата для отображения времени
@@ -196,6 +197,8 @@ function publishImage(file) {
 
         // не понимаю, какую ссылку вставлять сюда.. (
         menu.querySelector('input.menu__url').value = `${window.location.href}/https://neto-api.herokuapp.com/pic/${res.id}?`;
+        
+        wrap.querySelector('.current-image').addEventListener('load', createCanvas);
         wrap.querySelector('.current-image').src = res.url;
         
         // отрисовываем полученные комментарии
@@ -255,6 +258,7 @@ menu.querySelector('input.menu_copy').addEventListener('click', () => {
 function createBlankForm() {
     const newForm = document.createElement('form');
     newForm.classList.add('comments__form');
+    newForm.style.zIndex = 10;
     newForm.innerHTML = `
         <span class="comments__marker"></span><input type="checkbox" class="comments__marker-checkbox">
         <div class="comments__body">
@@ -276,7 +280,7 @@ function createBlankForm() {
 }
 
 // создание нового комментария на холсте
-wrap.querySelector('.current-image').addEventListener('click', (event) => {
+canvas.addEventListener('click', (event) => {
     // проверяем, что включен режим "Комментирование" и стоит галочка "Показывать комментарии"
     if (comments.dataset.state !== 'selected' || !wrap.querySelector('#comments-on').checked) return;
 
@@ -288,10 +292,8 @@ wrap.querySelector('.current-image').addEventListener('click', (event) => {
     const marker = newComment.querySelector('.comments__marker');
     const coordX = event.pageX - getComputedStyle(marker).left.slice(0, -2) - (+getComputedStyle(marker).width.slice(0, -2)) / 2;
     const coordY = event.pageY - getComputedStyle(marker).top.slice(0, -2) - getComputedStyle(marker).height.slice(0, -2);
-    newComment.style.cssText = `
-        top: ${coordY}px;
-        left: ${coordX}px;
-    `;
+    newComment.style.top = coordY + 'px';
+    newComment.style.left = coordX + 'px';
 
     // в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно current-image)
     newComment.dataset.left = newComment.getBoundingClientRect().left - wrap.querySelector('.current-image').getBoundingClientRect().left;
@@ -366,10 +368,9 @@ function updateComments(newComments) {
             
             const coordX = newComments[id].left + wrap.querySelector('.current-image').getBoundingClientRect().left + window.pageXOffset;
             const coordY = newComments[id].top + wrap.querySelector('.current-image').getBoundingClientRect().top + window.pageYOffset;
-            newForm.style.cssText = `
-                top: ${coordY}px;
-                left: ${coordX}px;
-            `;
+            newForm.style.top = coordY + 'px';
+            newForm.style.left = coordX + 'px';
+            
             addMsgToForm(newComments[id], newForm);
             wrap.appendChild(newForm);
 
@@ -447,3 +448,166 @@ function insertWSComment(wsComment) {
 // };
 // console.log(testComments);
 
+// ~~~~~~~~~~ Рисование ~~~~~~~~~~~~~~~
+
+function throttleImg(callback) {
+    let isWaiting = false;
+    return function (...rest) {
+        if (!isWaiting) {
+            callback.apply(this, rest);
+            isWaiting = true;
+            setTimeout(() => {
+                isWaiting = false;
+            }, 2000);
+        }
+    };
+}
+
+const BRUSH_RADIUS = 4;
+
+
+
+function createCanvas() {
+    const width = getComputedStyle(wrap.querySelector('.current-image')).width.slice(0, -2);
+    const height = getComputedStyle(wrap.querySelector('.current-image')).height.slice(0, -2);
+    canvas.width = width;
+    canvas.height = height;
+    // canvas.style.width = width + 'px';
+    // canvas.style.height = height + 'px';
+    canvas.style.cssText = `
+        width: ${width}px;
+        height: ${height}px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: block;
+        z-index: 5;
+    `;
+    wrap.insertBefore(canvas, wrap.querySelector('.current-image').nextElementSibling);
+}
+
+// const undoBtn = document.getElementById("undo");
+// const redoBtn = document.getElementById("redo");
+// const clearBtn = document.getElementById("clear");
+// const ctx = canvas.getContext("2d");
+// ctx.strokeStyle = 'red';
+// ctx.fillStyle = 'red';
+
+// let curves = [];
+// let undone = [];
+// let drawing = false;
+// let weird = false;
+// let needsRepaint = false;
+
+// // curves and figures
+// function circle(point) {
+//   ctx.beginPath();
+//   ctx.arc(...point, BRUSH_RADIUS / 2, 0, 2 * Math.PI);
+//   ctx.fill();
+// }
+
+// function smoothCurveBetween (p1, p2) {
+//   // Bezier control point
+//   const cp = p1.map((coord, idx) => (coord + p2[idx]) / 2);
+//   ctx.quadraticCurveTo(...p1, ...cp);
+// }
+
+// function smoothCurve(points) {
+//   ctx.beginPath();
+//   ctx.lineWidth = BRUSH_RADIUS;
+//   ctx.lineJoin = 'round';
+//   ctx.lineCap = 'round';
+
+//   ctx.moveTo(...points[0]);
+
+//   for(let i = 1; i < points.length - 1; i++) {
+//     smoothCurveBetween(points[i], points[i + 1]);
+//   }
+
+//   ctx.stroke();
+// }
+
+// // events
+// function makePoint(x, y, reflect = false) {
+//   return  reflect ? [y, x] : [x, y];
+// };
+
+
+// canvas.addEventListener("mousedown", (evt) => {
+//   drawing = true;
+//   weird = evt.shiftKey; // press shift to make things weird =)
+//   undone = []; // reset the undone stack
+
+//   const curve = []; // create a new curve
+
+//   curve.push(makePoint(evt.offsetX, evt.offsetY, weird)); // add a new point
+//   curves.push(curve); // add the curve to the array of curves
+//   needsRepaint = true;
+// });
+
+// canvas.addEventListener("mouseup", (evt) => {
+//   drawing = false;
+// });
+
+// canvas.addEventListener("mouseleave", (evt) => {
+//   drawing = false;
+// });
+
+// canvas.addEventListener("mousemove", (evt) => {
+//   if (drawing) {
+//     // add a point
+//     const point = makePoint(evt.offsetX, evt.offsetY, weird)
+//     curves[curves.length - 1].push(point);
+//     needsRepaint = true;
+//   }
+// });
+
+// undoBtn.addEventListener("click", (evt) => {
+//   if (curves.length > 0) {
+//     undone.push(curves.pop());
+//   }
+
+//   needsRepaint = true;
+// });
+
+// redoBtn.addEventListener("click", (evt) => {
+//   if (undone.length > 0) {
+//     curves.push(undone.pop());
+//   }
+
+//   needsRepaint = true;
+// });
+
+// clearBtn.addEventListener("click", (evt) => {
+//   curves = [];
+//   undone = [];
+
+//   needsRepaint = true;
+// });
+
+// // rendering
+// function repaint () {
+//   // clear before repainting
+//   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+//   curves
+//     .forEach((curve) => {
+//       // first...
+//       circle(curve[0]);
+
+//       // the body is compraised of lines
+//       smoothCurve(curve);
+//     });
+// }
+
+// function tick () {
+//   if(needsRepaint) {
+//     repaint();
+//     needsRepaint = false;
+//   }
+
+//   window.requestAnimationFrame(tick);
+// }
+
+// tick();

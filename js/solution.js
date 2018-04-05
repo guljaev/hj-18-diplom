@@ -10,7 +10,9 @@ const share = menu.querySelector('.share');
 const modeHTMLElements = Array.from( menu.querySelectorAll('.mode') );
 let picID;
 let shownComments = {};
+let wsGlobal = null;
 const canvas = document.createElement('canvas');
+const imageFromServer = document.createElement('img');
 
 
 // преобразование timestamp в строку необходимого формата для отображения времени
@@ -198,7 +200,12 @@ function publishImage(file) {
         // не понимаю, какую ссылку вставлять сюда.. (
         menu.querySelector('input.menu__url').value = `${window.location.href}/https://neto-api.herokuapp.com/pic/${res.id}?`;
         
-        wrap.querySelector('.current-image').addEventListener('load', createCanvas);
+        // создаем canvas для собственного рисования и img для отрисовки данных от сервера
+        wrap.querySelector('.current-image').addEventListener('load', () => {
+            createCanvas();
+            createImageFromServerElement();
+        });
+        
         wrap.querySelector('.current-image').src = res.url;
         
         // отрисовываем полученные комментарии
@@ -220,6 +227,7 @@ function publishImage(file) {
             console.log('ошибка вэбсокета');
             throw error;
         });
+        wsGlobal = ws;
     })
     .catch(err => {
         menu.style.display = 'none';
@@ -463,6 +471,34 @@ function throttleImg(callback) {
     };
 }
 
+// changing color
+Array.from(menu.querySelectorAll('.menu__color')).forEach(colorInput => {
+    colorInput.addEventListener('change', () => {
+        if (!colorInput.checked) return;
+        switch(colorInput.value) {
+            case 'red':
+                currColor = '#ea5d56';
+                break;
+            case 'yellow':
+                currColor = '#f3d135';
+                break;
+            case 'green':
+                currColor = '#6cbe47';
+                break;
+            case 'blue':
+                currColor = '#53a7f5';
+                break;
+            case 'purple':
+                currColor = '#b36ade';
+                break;
+            default:
+                currColor = '#6cbe47';
+                break;
+        }
+    });
+});
+
+
 function createCanvas() {
     const width = getComputedStyle(wrap.querySelector('.current-image')).width.slice(0, -2);
     const height = getComputedStyle(wrap.querySelector('.current-image')).height.slice(0, -2);
@@ -479,15 +515,20 @@ function createCanvas() {
         z-index: 5;
     `;
     wrap.insertBefore(canvas, wrap.querySelector('.current-image').nextElementSibling);
+    curves = [];
+    drawing = false;
+    needsRepaint = false;
+    currColor = '#6cbe47';
 }
 
 const BRUSH_RADIUS = 4;
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext('2d');
 // ctx.strokeStyle = '#6cbe47';
 // ctx.fillStyle = '#6cbe47';
 let curves = [];
 let drawing = false;
 let needsRepaint = false;
+let currColor = '#6cbe47';
 
 // curves and figures
 function circle(point) {
@@ -522,25 +563,30 @@ function makePoint(x, y) {
     return [x, y];
 }
 
-canvas.addEventListener("mousedown", (evt) => {
+canvas.addEventListener('mousedown', (evt) => {
+    if (draw.dataset.state !== 'selected') return;
+
     drawing = true;
 
     const curve = []; // create a new curve
+    curve.color = currColor; // define color of the curve
 
     curve.push(makePoint(evt.offsetX, evt.offsetY)); // add a new point
     curves.push(curve); // add the curve to the array of curves
     needsRepaint = true;
 });
 
-canvas.addEventListener("mouseup", (evt) => {
+canvas.addEventListener('mouseup', (evt) => {
     drawing = false;
 });
 
-canvas.addEventListener("mouseleave", (evt) => {
+canvas.addEventListener('mouseleave', (evt) => {
     drawing = false;
 });
 
-canvas.addEventListener("mousemove", (evt) => {
+canvas.addEventListener('mousemove', (evt) => {
+    if (draw.dataset.state !== 'selected') return;
+
     if (drawing) {
         // add a point
         const point = makePoint(evt.offsetX, evt.offsetY);
@@ -554,16 +600,17 @@ canvas.addEventListener("mousemove", (evt) => {
 function repaint() {
     // clear before repainting
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#6cbe47';
-    ctx.fillStyle = '#6cbe47';
 
     curves
         .forEach((curve) => {
-        // first...
-        circle(curve[0]);
+            // choose used color
+            ctx.strokeStyle = curve.color;
+            ctx.fillStyle = curve.color;
+            // first...
+            circle(curve[0]);
 
-        // the body is compraised of lines
-        smoothCurve(curve);
+            // the body is comprised of lines
+            smoothCurve(curve);
         });
 }
 
@@ -577,3 +624,31 @@ function tick() {
 }
 
 tick();
+
+// ~~~~~~~~~~~~~~~~~ Рисование взаимодействие с сервером ~~~~~~~~~~~~~~~~~~~
+
+function createImageFromServerElement() {
+    const width = getComputedStyle(wrap.querySelector('.current-image')).width;
+    const height = getComputedStyle(wrap.querySelector('.current-image')).height;
+    imageFromServer.style.cssText = `
+        width: ${width};
+        height: ${height};
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: block;
+        z-index: 3;
+    `;
+    imageFromServer.src = './pic/transparent.png';
+    wrap.insertBefore(imageFromServer, wrap.querySelector('.current-image'));
+}
+
+setTimeout(() => {
+    canvas.toBlob(blob => {
+        console.log('15 sec is out');
+        if (wsGlobal) {
+            wsGlobal.send(blob);
+        }
+    });
+}, 15000);

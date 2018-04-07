@@ -9,22 +9,22 @@ const draw = menu.querySelector('.draw');
 const share = menu.querySelector('.share');
 const modeHTMLElements = Array.from( menu.querySelectorAll('.mode') );
 let picID;
-let shownComments = {};
+const shownComments = {};
 let wsGlobal = null;
 const canvas = document.createElement('canvas');
-const imageFromServer = document.createElement('img');
+const userStrokesImgElement = document.createElement('img');
 let curvesNumberToRemoveNextTime = 0;
 
 
 // преобразование timestamp в строку необходимого формата для отображения времени
 function getDate(timestamp) {
     const options = {
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric'
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric'
     };
   
     const date = new Date(timestamp);
@@ -96,6 +96,20 @@ function throttle(callback) {
     };
 }
 
+// если меню "скукоживается" (не хватает длины), корректируем координату по x
+function checkMenuRumple() {
+    if (menu.offsetHeight > 100) {
+        menu.style.left = (wrap.offsetWidth - menu.offsetWidth - window.pageXOffset) / 2 + 'px';
+    }
+}
+
+function checkMenuRumpleTick() {
+    checkMenuRumple();
+    window.requestAnimationFrame(checkMenuRumpleTick);
+}
+
+checkMenuRumpleTick();
+
 // ~~~~~~~~~~~~~~~~~~~~ Показывать/не покаазывать комментарии ~~~~~~~~~~~~~~~~~~~
 wrap.querySelector('#comments-on').addEventListener('change', checkCommentsShow);
 wrap.querySelector('#comments-off').addEventListener('change', checkCommentsShow);
@@ -123,7 +137,7 @@ menu.style.top = ( (document.documentElement.clientHeight - menu.offsetHeight) /
 menu.style.left = ( (document.documentElement.clientWidth - menu.offsetWidth) / 2) + 'px';
 
 
-    // при наличии id внутри ссылки сразу делаем get запрос
+    // при наличии id внутри ссылки сразу делаем GET-запрос
 const regexp = /id=([^&]+)/i;
 if (regexp.exec(document.location.search)) {
     picID = regexp.exec(document.location.search)[1];
@@ -140,48 +154,7 @@ if (regexp.exec(document.location.search)) {
     })
 
     .then(res => {
-        console.log(res);
-        // переключаем режим
-        menu.dataset.state = 'selected';
-        modeHTMLElements.forEach(elem => elem.dataset.state = '');
-        share.dataset.state = 'selected';
-
-        // так толком не разобрался с формированием адреса ссылки ( где можно почитать про это?
-        const url = (regexp.exec(document.location.search)) ? window.location.href : `${window.location.href}?id=${res.id}`;
-        menu.querySelector('input.menu__url').value = url;
-        
-        // создаем canvas для собственного рисования и img для отрисовки данных от сервера
-        wrap.querySelector('.current-image').addEventListener('load', () => {
-            createCanvas();
-            createImageFromServerElement();
-        });
-        
-        wrap.querySelector('.current-image').src = res.url;
-        
-        // отрисовываем полученные комментарии
-        updateComments(res.comments);
-        drawUsersStrokes(res.mask);
-
-        // создаем соединение вэбсокет
-        const ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${res.id}`);
-        ws.addEventListener('open', () => {
-            // console.log('web socket is open');
-        });
-        ws.addEventListener('message', event => {
-            console.log(`пришло сообщение через вэбсокет:\n${event.data}`);
-            const wsData = JSON.parse(event.data);
-            if (wsData.event === 'comment') {
-                insertWSComment(wsData.comment);
-            }
-            if (wsData.event === 'mask') {
-                drawUsersStrokes(wsData.url);
-            }
-        });
-        ws.addEventListener('error', error => {
-            console.log('ошибка вэбсокета');
-            throw error;
-        });
-        wsGlobal = ws;
+        treatAjaxServerAnswer(res);
     })
     .catch(err => {
         menu.style.display = 'none';
@@ -192,7 +165,52 @@ if (regexp.exec(document.location.search)) {
     });  
 }
 
-    // выбор файла изображения
+function treatAjaxServerAnswer(res) {
+    // console.log(res);
+    // переключаем режим меню
+    menu.dataset.state = 'selected';
+    modeHTMLElements.forEach(elem => elem.dataset.state = '');
+    share.dataset.state = 'selected';
+
+    // сам не смог разобраться с формированием адреса ссылки, и что по ней должно открываться =( где можно почитать про то, из чего формируется адрес, а какие его части можно использовать при открытии страницы?
+    const url = document.location.href.split('?')[0] + `?id=${res.id}`;
+    menu.querySelector('input.menu__url').value = url;
+    
+    // после загрузки картинки..
+    wrap.querySelector('.current-image').addEventListener('load', () => {
+        // создаем canvas для собственного рисования и img для отрисовки данных от сервера
+        createCanvas();
+        createUserStrokesImgElement();
+        
+        // отрисовываем полученные комментарии и штрихи пользователей
+        updateComments(res.comments);
+        drawUsersStrokes(res.mask);
+    });
+    wrap.querySelector('.current-image').src = res.url;
+    
+    // создаем соединение вэбсокет
+    const ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${res.id}`);
+    ws.addEventListener('open', () => {
+        // console.log('web socket is open');
+    });
+    ws.addEventListener('message', event => {
+        console.log(`пришло сообщение через вэбсокет:\n${event.data}`);
+        const wsData = JSON.parse(event.data);
+        if (wsData.event === 'comment') {
+            insertWSComment(wsData.comment);
+        }
+        if (wsData.event === 'mask') {
+            drawUsersStrokes(wsData.url);
+        }
+    });
+    ws.addEventListener('error', error => {
+        console.log('ошибка вэбсокета');
+        throw error;
+    });
+    wsGlobal = ws;
+}
+
+    // Возможность загрузки файла изображения
 const fileInput = document.createElement('input');
 fileInput.setAttribute('type', 'file');
 fileInput.setAttribute('accept', 'image/jpeg, image/png');
@@ -225,6 +243,7 @@ wrap.addEventListener('dragover', event => event.preventDefault());
 
 // отправка картинки на сервер и получение данных от сервера
 function publishImage(file) {
+    if (!file) return;
     const formData = new FormData();
     formData.append('title', file.name);
     formData.append('image', file);
@@ -256,59 +275,16 @@ function publishImage(file) {
         if (res.status >= 400) throw res.statusText;
         return res.json();
     })
-
     .then(res => {
         picID = res.id;
         return fetch(`https://neto-api.herokuapp.com/pic/${res.id}`);
     })
-
     .then(res => {
         if (res.status >= 400) throw res.statusText;
         return res.json();
     })
-
     .then(res => {
-        // переключаем режим
-        menu.dataset.state = 'selected';
-        modeHTMLElements.forEach(elem => elem.dataset.state = '');
-        share.dataset.state = 'selected';
-
-        // так толком не разобрался с формированием адреса ссылки ( где можно почитать про это?
-        const url = (regexp.exec(document.location.search)) ? window.location.href : `${window.location.href}?id=${res.id}`;
-        menu.querySelector('input.menu__url').value = url;
-        
-        // создаем canvas для собственного рисования и img для отрисовки данных от сервера
-        wrap.querySelector('.current-image').addEventListener('load', () => {
-            createCanvas();
-            createImageFromServerElement();
-        });
-        
-        wrap.querySelector('.current-image').src = res.url;
-        
-        // отрисовываем полученные комментарии
-        updateComments(res.comments);
-        drawUsersStrokes(res.mask);
-
-        // создаем соединение вэбсокет
-        const ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${res.id}`);
-        ws.addEventListener('open', () => {
-            // console.log('web socket is open');
-        });
-        ws.addEventListener('message', event => {
-            console.log(`пришло сообщение через вэбсокет:\n${event.data}`);
-            const wsData = JSON.parse(event.data);
-            if (wsData.event === 'comment') {
-                insertWSComment(wsData.comment);
-            }
-            if (wsData.event === 'mask') {
-                drawUsersStrokes(wsData.url);
-            }
-        });
-        ws.addEventListener('error', error => {
-            console.log('ошибка вэбсокета');
-            throw error;
-        });
-        wsGlobal = ws;
+        treatAjaxServerAnswer(res);
     })
     .catch(err => {
         menu.style.display = 'none';
@@ -365,6 +341,42 @@ function createBlankForm() {
             <input class="comments__submit" type="submit" value="Отправить">
         </div>
     `;
+
+    // кнопка "Закрыть"
+    newForm.querySelector('.comments__close').addEventListener('click', () => {
+        newForm.querySelector('.comments__marker-checkbox').checked = false;
+    });
+
+    // кнопка "Отправить"
+    newForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const message = newForm.querySelector('.comments__input').value;
+        const body = `message=${encodeURIComponent(message)}&left=${encodeURIComponent(newForm.dataset.left)}&top=${encodeURIComponent(newForm.dataset.top)}`;
+        newForm.querySelector('.loader').parentElement.style.display = '';
+
+        fetch(`https://neto-api.herokuapp.com/pic/${picID}/comments`, {
+            body: body,
+            credentials: 'same-origin',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        .then(res => {
+            if (res.status >= 400) throw res.statusText;
+            return res.json();
+        })
+        .then(res => {
+            // console.log(res);
+            updateComments(res.comments);
+            newForm.querySelector('.comments__input').value = '';
+        })
+        .catch(err => {
+            console.log(err);
+            newForm.querySelector('.loader').parentElement.style.display = 'none';
+        });
+    });
+
     return newForm;
 }
 
@@ -387,43 +399,6 @@ canvas.addEventListener('click', (event) => {
     // в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно current-image)
     newComment.dataset.left = newComment.getBoundingClientRect().left - wrap.querySelector('.current-image').getBoundingClientRect().left;
     newComment.dataset.top = newComment.getBoundingClientRect().top - wrap.querySelector('.current-image').getBoundingClientRect().top;
-
-    // кнопка "Закрыть"
-    newComment.querySelector('.comments__close').addEventListener('click', () => {
-        newComment.querySelector('.comments__marker-checkbox').checked = false;
-    });
-
-    // кнопка "Отправить"
-    newComment.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const message = newComment.querySelector('.comments__input').value;
-        // const left = newComment.getBoundingClientRect().left - wrap.querySelector('.current-image').getBoundingClientRect().left;
-        // const top = newComment.getBoundingClientRect().top - wrap.querySelector('.current-image').getBoundingClientRect().top;
-        const body = `message=${encodeURIComponent(message)}&left=${encodeURIComponent(newComment.dataset.left)}&top=${encodeURIComponent(newComment.dataset.top)}`;
-        newComment.querySelector('.loader').parentElement.style.display = '';
-
-        fetch(`https://neto-api.herokuapp.com/pic/${picID}/comments`, {
-            body: body,
-            credentials: 'same-origin',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        })
-        .then(res => {
-            if (res.status >= 400) throw res.statusText;
-            return res.json();
-        })
-        .then(res => {
-            // console.log(res);
-            updateComments(res.comments);
-            newComment.querySelector('.comments__input').value = '';
-        })
-        .catch(err => {
-            console.log(err);
-            newComment.querySelector('.loader').parentElement.style.display = 'none';
-        });
-    });
 });
 
 
@@ -682,8 +657,8 @@ function repaint() {
         });
 }
 
-const throttleSendImageToServer = throttleImg(sendImageToServer, 4000);
-const debounceSendImageToServer = debounceImg(sendImageToServer, 3000);
+const throttleSendImageToServer = throttleImg(sendImageToServer, 2000);
+const debounceSendImageToServer = debounceImg(sendImageToServer, 2000);
 
 function tick() {
     if (needsRepaint) {
@@ -700,10 +675,10 @@ tick();
 
 // ~~~~~~~~~~~~~~~~~ Рисование: взаимодействие с сервером ~~~~~~~~~~~~~~~~~~~
 
-function createImageFromServerElement() {
+function createUserStrokesImgElement() {
     const width = getComputedStyle(wrap.querySelector('.current-image')).width;
     const height = getComputedStyle(wrap.querySelector('.current-image')).height;
-    imageFromServer.style.cssText = `
+    userStrokesImgElement.style.cssText = `
         width: ${width};
         height: ${height};
         position: absolute;
@@ -713,15 +688,15 @@ function createImageFromServerElement() {
         display: block;
         z-index: 3;
     `;
-    imageFromServer.src = './pic/transparent.png';
-    wrap.insertBefore(imageFromServer, wrap.querySelector('.current-image'));
+    userStrokesImgElement.src = './pic/transparent.png';
+    wrap.insertBefore(userStrokesImgElement, wrap.querySelector('.current-image'));
 }
 
 function throttleImg(callback, delay) {
     let isWaiting = false;
     return function (...rest) {
         if (!isWaiting) {
-            console.log('вызываю callback!');
+            console.log('вызываю throttle callback!');
             callback.apply(this, rest);
             isWaiting = true;
             setTimeout(() => {
@@ -746,26 +721,24 @@ function debounceImg(callback, delay) {
 function sendImageToServer() {
     canvas.toBlob(blob => {
         if (!wsGlobal) return;
-        // const curvesNumberToRemoveNow = curvesNumberToRemoveNextTime;
-        // curvesNumberToRemoveNextTime = curves.length - 1;
+        const curvesNumberToRemoveNow = curvesNumberToRemoveNextTime;
+        curves.splice(0, curvesNumberToRemoveNow);
+        curvesNumberToRemoveNextTime = curves.length - 1;
+
         wsGlobal.send(blob);
-        // curves.splice(0, curvesNumberToRemoveNow);
     });
 }
 
 function drawUsersStrokes(url) {
     if (!url) return;
-    imageFromServer.src = url;
+    userStrokesImgElement.src = url;
     console.log(url);
 }
 
-
-// setTimeout(() => {
-//     canvas.toBlob(blob => {
-//         console.log('15 sec is out');
-//         if (wsGlobal) {
-//             wsGlobal.send(blob);
-//         }
-//     });
-// }, 15000);
+// canvas.addEventListener('mousedown', (event) => {
+//     console.log('offsetX', event.offsetX, event.offsetY);
+//     console.log('layerX', event.layerX, event.layerY);
+//     console.log('clientX', event.clientX, event.clientY);
+//     console.log('pageX', event.pageX, event.pageY);
+// });
 

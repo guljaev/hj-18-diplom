@@ -11,6 +11,7 @@ const modeHTMLElements = Array.from( menu.querySelectorAll('.mode') );
 let picID;
 const shownComments = {};
 let wsGlobal = null;
+const commentsWrap = document.createElement('div');
 const canvas = document.createElement('canvas');
 const userStrokesImgElement = document.createElement('img');
 let curvesNumberToRemoveNextTime = 0;
@@ -181,6 +182,9 @@ function treatAjaxServerAnswer(res) {
         // создаем canvas для собственного рисования и img для отрисовки данных от сервера
         createCanvas();
         createUserStrokesImgElement();
+
+        // создаем div по размерам картинки, чтобы вкладывать в него комментарии
+        createCommentsWrap();
         
         // отрисовываем полученные комментарии и штрихи пользователей
         updateComments(res.comments);
@@ -320,6 +324,22 @@ menu.querySelector('input.menu_copy').addEventListener('click', () => {
 
 // ~~~~~~~~~~~~~~режим "Комментирование"~~~~~~~~~~~~~~~
 
+// создаем div, в который будем помещать комментарии (нужно, чтобы координаты комментариев можно было зафиксировать относительно этого div, а не документа, чтобы комментарии не съезжали при изменении окна браузера)
+function createCommentsWrap() {
+    const width = getComputedStyle(wrap.querySelector('.current-image')).width;
+    const height = getComputedStyle(wrap.querySelector('.current-image')).height;
+    commentsWrap.style.cssText = `
+        width: ${width};
+        height: ${height};
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: block;
+    `;
+    wrap.appendChild(commentsWrap);
+}
+
 function createBlankForm() {
     const newForm = document.createElement('form');
     newForm.classList.add('comments__form');
@@ -387,7 +407,8 @@ canvas.addEventListener('click', (event) => {
 
     const newComment = createBlankForm();
     newComment.querySelector('.comments__marker-checkbox').checked = true;
-    wrap.appendChild(newComment);
+    // wrap.appendChild(newComment);
+    commentsWrap.appendChild(newComment);
 
     // смещаем координаты формы так, чтобы стрелка маркера указывала ровно на точку, куда мы кликнули
     const marker = newComment.querySelector('.comments__marker');
@@ -547,17 +568,30 @@ function createCanvas() {
     const height = getComputedStyle(wrap.querySelector('.current-image')).height.slice(0, -2);
     canvas.width = width;
     canvas.height = height;
+
+    // canvas.style.cssText = `
+    //     width: ${width}px;
+    //     height: ${height}px;
+    //     position: absolute;
+    //     top: 50%;
+    //     left: 50%;
+    //     transform: translate(-50%, -50%);
+    //     display: block;
+    //     z-index: 5;
+    // `;
+    // wrap.insertBefore(canvas, wrap.querySelector('.current-image').nextElementSibling);
+
     canvas.style.cssText = `
-        width: ${width}px;
-        height: ${height}px;
+        width: 100%;
+        height: 100%;
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        top: 0;
+        left: 0;
         display: block;
         z-index: 5;
     `;
-    wrap.insertBefore(canvas, wrap.querySelector('.current-image').nextElementSibling);
+    commentsWrap.appendChild(canvas);
+
     curves = [];
     drawing = false;
     needsRepaint = false;
@@ -676,20 +710,32 @@ tick();
 // ~~~~~~~~~~~~~~~~~ Рисование: взаимодействие с сервером ~~~~~~~~~~~~~~~~~~~
 
 function createUserStrokesImgElement() {
-    const width = getComputedStyle(wrap.querySelector('.current-image')).width;
-    const height = getComputedStyle(wrap.querySelector('.current-image')).height;
+    userStrokesImgElement.src = './pic/transparent.png';
+
+    // const width = getComputedStyle(wrap.querySelector('.current-image')).width;
+    // const height = getComputedStyle(wrap.querySelector('.current-image')).height;
+    // userStrokesImgElement.style.cssText = `
+    //     width: ${width};
+    //     height: ${height};
+    //     position: absolute;
+    //     top: 50%;
+    //     left: 50%;
+    //     transform: translate(-50%, -50%);
+    //     display: block;
+    //     z-index: 3;
+    // `;
+    // wrap.insertBefore(userStrokesImgElement, wrap.querySelector('.current-image'));
+
     userStrokesImgElement.style.cssText = `
-        width: ${width};
-        height: ${height};
+        width: 100%;
+        height: 100%;
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        top: 0;
+        left: 0;
         display: block;
         z-index: 3;
     `;
-    userStrokesImgElement.src = './pic/transparent.png';
-    wrap.insertBefore(userStrokesImgElement, wrap.querySelector('.current-image'));
+    commentsWrap.appendChild(userStrokesImgElement);
 }
 
 function throttleImg(callback, delay) {

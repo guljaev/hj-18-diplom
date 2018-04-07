@@ -179,12 +179,12 @@ function treatAjaxServerAnswer(res) {
     
     // после загрузки картинки..
     wrap.querySelector('.current-image').addEventListener('load', () => {
+        // создаем div по размерам картинки, чтобы вкладывать в него комментарии, canvas и img для отрисовки данных от сервера
+        createCommentsWrap();
+
         // создаем canvas для собственного рисования и img для отрисовки данных от сервера
         createCanvas();
         createUserStrokesImgElement();
-
-        // создаем div по размерам картинки, чтобы вкладывать в него комментарии
-        createCommentsWrap();
         
         // отрисовываем полученные комментарии и штрихи пользователей
         updateComments(res.comments);
@@ -412,14 +412,17 @@ canvas.addEventListener('click', (event) => {
 
     // смещаем координаты формы так, чтобы стрелка маркера указывала ровно на точку, куда мы кликнули
     const marker = newComment.querySelector('.comments__marker');
-    const coordX = event.pageX - getComputedStyle(marker).left.slice(0, -2) - (+getComputedStyle(marker).width.slice(0, -2)) / 2;
-    const coordY = event.pageY - getComputedStyle(marker).top.slice(0, -2) - getComputedStyle(marker).height.slice(0, -2);
-    newComment.style.top = coordY + 'px';
-    newComment.style.left = coordX + 'px';
+    // const coordX = event.pageX - getComputedStyle(marker).left.slice(0, -2) - (+getComputedStyle(marker).width.slice(0, -2)) / 2;
+    // const coordY = event.pageY - getComputedStyle(marker).top.slice(0, -2) - getComputedStyle(marker).height.slice(0, -2);
+    const coordX = event.offsetX - getComputedStyle(marker).left.slice(0, -2) - (+getComputedStyle(marker).width.slice(0, -2)) / 2;
+    const coordY = event.offsetY - getComputedStyle(marker).top.slice(0, -2) - getComputedStyle(marker).height.slice(0, -2);
 
-    // в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно current-image)
-    newComment.dataset.left = newComment.getBoundingClientRect().left - wrap.querySelector('.current-image').getBoundingClientRect().left;
-    newComment.dataset.top = newComment.getBoundingClientRect().top - wrap.querySelector('.current-image').getBoundingClientRect().top;
+    // и в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно current-image)
+    newComment.dataset.left = newComment.style.top = coordY + 'px';
+    newComment.dataset.top = newComment.style.left = coordX + 'px';
+
+    // newComment.dataset.left = newComment.getBoundingClientRect().left - wrap.querySelector('.current-image').getBoundingClientRect().left;
+    // newComment.dataset.top = newComment.getBoundingClientRect().top - wrap.querySelector('.current-image').getBoundingClientRect().top;
 });
 
 

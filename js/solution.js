@@ -337,8 +337,19 @@ function createCommentsWrap() {
         display: block;
     `;
     wrap.appendChild(commentsWrap);
+
+    // отображаем интересующие комментарии (по клику) поверх остальных
+    commentsWrap.addEventListener('click', event => {
+        if (event.target.closest('form.comments__form')) {
+            Array.from(commentsWrap.querySelectorAll('form.comments__form')).forEach(form => {
+                form.style.zIndex = 10;
+            });
+            event.target.closest('form.comments__form').style.zIndex = 11;
+        }
+    });
 }
 
+// Создаем новый элемент form для комментариев
 function createBlankForm() {
     const newForm = document.createElement('form');
     newForm.classList.add('comments__form');

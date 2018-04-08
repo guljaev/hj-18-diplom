@@ -489,6 +489,7 @@ body {
 .comment__message {
   color: #ffffff;
   line-height: 130%;
+  white-space: pre-line;
 }
 
 .comments__body input, .comments__body textarea {

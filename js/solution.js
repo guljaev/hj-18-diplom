@@ -97,7 +97,7 @@ function throttle(callback) {
     };
 }
 
-// если меню "скукоживается" (не хватает длины), корректируем координату по x
+// если меню "скукоживается" (не хватает длины), смещаем его по горизонатали
 function checkMenuRumple() {
     if (menu.offsetHeight > 100) {
         menu.style.left = (wrap.offsetWidth - menu.offsetWidth - window.pageXOffset) / 2 + 'px';
@@ -167,7 +167,6 @@ if (regexp.exec(document.location.search)) {
 }
 
 function treatAjaxServerAnswer(res) {
-    // console.log(res);
     // переключаем режим меню
     menu.dataset.state = 'selected';
     modeHTMLElements.forEach(elem => elem.dataset.state = '');
@@ -315,7 +314,7 @@ modeHTMLElements.forEach(elem => {
     }
 });
 
-// копирование в буфер обмена
+// копирование в буфер обмена из режима "Поделиться"
 
 menu.querySelector('input.menu_copy').addEventListener('click', () => {
     menu.querySelector('input.menu__url').select();
@@ -387,7 +386,6 @@ function createBlankForm() {
             return res.json();
         })
         .then(res => {
-            // console.log(res);
             updateComments(res.comments);
             newForm.querySelector('.comments__input').value = '';
         })
@@ -407,32 +405,29 @@ canvas.addEventListener('click', (event) => {
 
     const newComment = createBlankForm();
     newComment.querySelector('.comments__marker-checkbox').checked = true;
-    // wrap.appendChild(newComment);
     commentsWrap.appendChild(newComment);
 
     // смещаем координаты формы так, чтобы стрелка маркера указывала ровно на точку, куда мы кликнули
     const marker = newComment.querySelector('.comments__marker');
-    // const coordX = event.pageX - getComputedStyle(marker).left.slice(0, -2) - (+getComputedStyle(marker).width.slice(0, -2)) / 2;
-    // const coordY = event.pageY - getComputedStyle(marker).top.slice(0, -2) - getComputedStyle(marker).height.slice(0, -2);
+
     const coordX = event.offsetX - getComputedStyle(marker).left.slice(0, -2) - (+getComputedStyle(marker).width.slice(0, -2)) / 2;
     const coordY = event.offsetY - getComputedStyle(marker).top.slice(0, -2) - getComputedStyle(marker).height.slice(0, -2);
 
-    // и в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно current-image)
-    newComment.dataset.left = newComment.style.top = coordY + 'px';
-    newComment.dataset.top = newComment.style.left = coordX + 'px';
+    newComment.style.left = coordX + 'px';
+    newComment.style.top = coordY + 'px';
 
-    // newComment.dataset.left = newComment.getBoundingClientRect().left - wrap.querySelector('.current-image').getBoundingClientRect().left;
-    // newComment.dataset.top = newComment.getBoundingClientRect().top - wrap.querySelector('.current-image').getBoundingClientRect().top;
+    // и в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно current-image)
+    newComment.dataset.left = coordX;
+    newComment.dataset.top = coordY;
 });
 
 
 // отрисовка комментариев, пришедших с сервера
-
 function updateComments(newComments) {
     if (!newComments) return;
     Object.keys(newComments).forEach(id => {
 
-        // если сообщение с таким id уже есть в shownComments (отрисованный комментарии), ничего не делаем
+        // если сообщение с таким id уже есть в shownComments (отрисованные комментарии), ничего не делаем
         if (id in shownComments) return;
         
         shownComments[id] = newComments[id];
@@ -453,14 +448,12 @@ function updateComments(newComments) {
             const newForm = createBlankForm();
             newForm.dataset.left = newComments[id].left;
             newForm.dataset.top = newComments[id].top;
-            
-            const coordX = newComments[id].left + wrap.querySelector('.current-image').getBoundingClientRect().left + window.pageXOffset;
-            const coordY = newComments[id].top + wrap.querySelector('.current-image').getBoundingClientRect().top + window.pageYOffset;
-            newForm.style.top = coordY + 'px';
-            newForm.style.left = coordX + 'px';
+
+            newForm.style.left = newComments[id].left + 'px';
+            newForm.style.top = newComments[id].top + 'px';
             
             addMsgToForm(newComments[id], newForm);
-            wrap.appendChild(newForm);
+            commentsWrap.appendChild(newForm);
 
             if (!wrap.querySelector('#comments-on').checked) {
                 newForm.style.display = 'none';
@@ -499,7 +492,7 @@ function addMsgToForm(newMsg, form) {
     form.querySelector('.comments__body').insertBefore(newMsgDiv, theNearestLowerDiv);
 }
 
-// обработка комментария от вэбсокета
+// обработка комментария от вэбсокета (преобразуем к тому же формату, что приходит по AJAX)
 function insertWSComment(wsComment) {
     const wsCommentEdited = {};
     wsCommentEdited[wsComment.id] = {};
@@ -510,31 +503,6 @@ function insertWSComment(wsComment) {
 
     updateComments(wsCommentEdited);
 }
-
-
-// для тестирования updateComments
-// const testComments = {
-//     '-L9K4123': {
-//         left: 363,
-//         message: 'Привет01',
-//         timestamp: 1522919707362,
-//         top: 165
-//     },
-//     '-L9K4124': {
-//         left: 363,
-//         message: 'Привет02',
-//         timestamp: 1622919707362,
-//         top: 165
-//     },
-//     '-L9K4125': {
-//         left: 463,
-//         message: 'Привет03',
-//         timestamp: 1622919707362,
-//         top: 265
-//     }
-
-// };
-// console.log(testComments);
 
 // ~~~~~~~~~~ Рисование ~~~~~~~~~~~~~~~
 
@@ -572,18 +540,6 @@ function createCanvas() {
     canvas.width = width;
     canvas.height = height;
 
-    // canvas.style.cssText = `
-    //     width: ${width}px;
-    //     height: ${height}px;
-    //     position: absolute;
-    //     top: 50%;
-    //     left: 50%;
-    //     transform: translate(-50%, -50%);
-    //     display: block;
-    //     z-index: 5;
-    // `;
-    // wrap.insertBefore(canvas, wrap.querySelector('.current-image').nextElementSibling);
-
     canvas.style.cssText = `
         width: 100%;
         height: 100%;
@@ -603,8 +559,6 @@ function createCanvas() {
 
 const BRUSH_RADIUS = 4;
 const ctx = canvas.getContext('2d');
-// ctx.strokeStyle = '#6cbe47';
-// ctx.fillStyle = '#6cbe47';
 let curves = [];
 let drawing = false;
 let needsRepaint = false;
@@ -714,21 +668,6 @@ tick();
 
 function createUserStrokesImgElement() {
     userStrokesImgElement.src = './pic/transparent.png';
-
-    // const width = getComputedStyle(wrap.querySelector('.current-image')).width;
-    // const height = getComputedStyle(wrap.querySelector('.current-image')).height;
-    // userStrokesImgElement.style.cssText = `
-    //     width: ${width};
-    //     height: ${height};
-    //     position: absolute;
-    //     top: 50%;
-    //     left: 50%;
-    //     transform: translate(-50%, -50%);
-    //     display: block;
-    //     z-index: 3;
-    // `;
-    // wrap.insertBefore(userStrokesImgElement, wrap.querySelector('.current-image'));
-
     userStrokesImgElement.style.cssText = `
         width: 100%;
         height: 100%;

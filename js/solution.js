@@ -156,6 +156,10 @@ if (regexp.exec(document.location.search)) {
 
     .then(res => {
         treatAjaxServerAnswer(res);
+        // переходим в режим "Комментирование"
+        menu.dataset.state = 'selected';
+        modeHTMLElements.forEach(elem => elem.dataset.state = '');
+        comments.dataset.state = 'selected';
     })
     .catch(err => {
         menu.style.display = 'none';

@@ -97,10 +97,12 @@ function throttle(callback) {
     };
 }
 
-// если меню "скукоживается" (не хватает длины), смещаем его по горизонатали
+// если меню "скукоживается" (не хватает длины), смещаем его по горизонатали, чтобы оно встало рядом с правым краем изображения
 function checkMenuRumple() {
     if (menu.offsetHeight > 100) {
-        menu.style.left = (wrap.offsetWidth - menu.offsetWidth - window.pageXOffset) / 2 + 'px';
+        console.log('rumple');
+        menu.style.left = '0px';
+        menu.style.left = (wrap.offsetWidth - menu.offsetWidth - 1) + 'px';
     }
 }
 
@@ -134,8 +136,10 @@ function checkCommentsShow() {
 wrap.dataset.state = '';
 menu.dataset.state = 'initial';
 
-menu.style.top = ( (document.documentElement.clientHeight - menu.offsetHeight) / 2) + 'px';
-menu.style.left = ( (document.documentElement.clientWidth - menu.offsetWidth) / 2) + 'px';
+// menu.style.top = ( (document.documentElement.clientHeight - menu.offsetHeight) / 2) + 'px';
+// menu.style.left = ( (document.documentElement.clientWidth - menu.offsetWidth) / 2) + 'px';
+menu.style.top = '30px';
+menu.style.left = (document.documentElement.clientWidth - menu.offsetWidth - 30) + 'px';
 
 
     // при наличии id внутри ссылки сразу делаем GET-запрос

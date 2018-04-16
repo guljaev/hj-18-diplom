@@ -378,7 +378,13 @@ function createBlankForm() {
 
     // кнопка "Закрыть"
     newForm.querySelector('.comments__close').addEventListener('click', () => {
-        newForm.querySelector('.comments__marker-checkbox').checked = false;
+        // если есть комментарии (помимо loader), то просто сворачиваем
+        if (newForm.querySelectorAll('.comment').length > 1) {
+            newForm.querySelector('.comments__marker-checkbox').checked = false;
+        } else {
+            // если комментариев нет, удалаем форму
+            newForm.remove();
+        }
     });
 
     // кнопка "Отправить"
@@ -522,6 +528,10 @@ function insertWSComment(wsComment) {
 // ~~~~~~~~~~ Рисование ~~~~~~~~~~~~~~~
 
 // changing color
+
+// убираю ластик
+menu.querySelector('.menu__eraser-wrap').style.display = 'none';
+
 Array.from(menu.querySelectorAll('.menu__color')).forEach(colorInput => {
     colorInput.addEventListener('change', () => {
         if (!colorInput.checked) return;

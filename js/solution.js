@@ -139,7 +139,7 @@ menu.dataset.state = 'initial';
 // menu.style.top = ( (document.documentElement.clientHeight - menu.offsetHeight) / 2) + 'px';
 // menu.style.left = ( (document.documentElement.clientWidth - menu.offsetWidth) / 2) + 'px';
 menu.style.top = '30px';
-menu.style.left = (document.documentElement.clientWidth - menu.offsetWidth - 30) + 'px';
+menu.style.left = '30px';
 
 
     // при наличии id внутри ссылки сразу делаем GET-запрос

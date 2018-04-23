@@ -249,6 +249,23 @@ wrap.addEventListener('dragover', event => event.preventDefault());
 // отправка картинки на сервер и получение данных от сервера
 function publishImage(file) {
     if (!file) return;
+
+    function fileTypeIsIncorrect(fileType) {
+        let isIncorrect = false;
+        fileType.split('/').forEach(type => {
+            if ( !(type === 'image' || type === 'png' || type === 'jpeg') ) {
+                isIncorrect = true;
+            }
+        }); 
+        return isIncorrect;   
+    }
+
+    if (fileTypeIsIncorrect(file.type)) {
+        wrap.querySelector('.error__message').textContent = 'Неверный формат файла. Пожалуйста, выберите изображение в формате .jpg или .png.';
+        wrap.querySelector('.error').style.display = '';
+        return;
+    }
+    
     const formData = new FormData();
     formData.append('title', file.name);
     formData.append('image', file);
@@ -257,23 +274,11 @@ function publishImage(file) {
     menu.style.display = 'none';
     wrap.querySelector('.image-loader').style.display = '';
 
-    Promise.resolve(file.type)
-    .then(fileType => {
-        fileType.split('/').forEach(type => {
-            if ( !(type === 'image' || type === 'png' || type === 'jpeg') ) {
-                throw 'Неверный формат файла. Пожалуйста, выберите изображение в формате .jpg или .png.';
-            }
-        });
-    })   
-    .then(() => fetch('https://neto-api.herokuapp.com/pic', {
+    fetch('https://neto-api.herokuapp.com/pic', {
         body: formData,
         credentials: 'same-origin',
         method: 'POST',
-        // headers: {
-        //     'Content-Type': 'multipart/form-data'
-        // }
-        // почему если прописать заголовок 'Content-Type': 'multipart/form-data' приходит ошибка?
-    }))
+    })
     .then(res => {
         Array.from(wrap.querySelectorAll('form.comments__form')).forEach(form => form.remove());
         menu.style.display = '';

@@ -259,11 +259,12 @@ function publishImage(file) {
 
     Promise.resolve(file.type)
     .then(fileType => {
-        const imageTypeRegExp = /^image\/png|^image\/jpeg/;
-        if (!imageTypeRegExp.test(fileType)) {
-            throw 'Неверный формат файла. Пожалуйста, выберите изображение в формате .jpg или .png.';
-        }
-    })
+        fileType.split('/').forEach(type => {
+            if ( !(type === 'image' || type === 'png' || type === 'jpeg') ) {
+                throw 'Неверный формат файла. Пожалуйста, выберите изображение в формате .jpg или .png.';
+            }
+        });
+    })   
     .then(() => fetch('https://neto-api.herokuapp.com/pic', {
         body: formData,
         credentials: 'same-origin',

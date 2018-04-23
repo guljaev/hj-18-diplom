@@ -225,16 +225,8 @@ function treatAjaxServerAnswer(res) {
 const fileInput = document.createElement('input');
 fileInput.setAttribute('type', 'file');
 fileInput.setAttribute('accept', 'image/jpeg, image/png');
-
 fileInput.classList.add('menu__fileloader');
-// fileInput.style.cssText = `
-//     position: absolute;
-//     width: 100%;
-//     height: 100%;
-//     top: 0;
-//     left: 0;
-//     opacity: 0;
-// `;
+
 fileInput.addEventListener('change', event => {
     const file = event.currentTarget.files[0];
     publishImage(file);
@@ -341,16 +333,6 @@ function createCommentsWrap() {
     commentsWrap.style.width = width;
     commentsWrap.style.height = height;
     commentsWrap.classList.add('comments-wrap');
-    // commentsWrap.style.cssText = `
-    //     width: ${width};
-    //     height: ${height};
-    //     position: absolute;
-    //     top: 50%;
-    //     left: 50%;
-    //     transform: translate(-50%, -50%);
-    //     display: block;
-    // `;
-
     wrap.appendChild(commentsWrap);
 
     
@@ -575,26 +557,7 @@ menu.querySelector('.menu__eraser-wrap').style.display = 'none';
 Array.from(menu.querySelectorAll('.menu__color')).forEach(colorInput => {
     colorInput.addEventListener('change', () => {
         if (!colorInput.checked) return;
-        switch(colorInput.value) {
-            case 'red':
-                currColor = '#ea5d56';
-                break;
-            case 'yellow':
-                currColor = '#f3d135';
-                break;
-            case 'green':
-                currColor = '#6cbe47';
-                break;
-            case 'blue':
-                currColor = '#53a7f5';
-                break;
-            case 'purple':
-                currColor = '#b36ade';
-                break;
-            default:
-                currColor = '#6cbe47';
-                break;
-        }
+        currColor = colorInput.value;
     });
 });
 
@@ -607,15 +570,6 @@ function createCanvas() {
 
     canvas.classList.add('user-strokes');
     canvas.style.zIndex = 5;
-    // canvas.style.cssText = `
-    //     width: 100%;
-    //     height: 100%;
-    //     position: absolute;
-    //     top: 0;
-    //     left: 0;
-    //     display: block;
-    //     z-index: 5;
-    // `;
 
     commentsWrap.appendChild(canvas);
 
@@ -736,18 +690,7 @@ tick();
 
 function createUserStrokesImgElement() {
     userStrokesImgElement.src = './pic/transparent.png';
-
     userStrokesImgElement.classList.add('user-strokes');
-    // userStrokesImgElement.style.cssText = `
-    //     width: 100%;
-    //     height: 100%;
-    //     position: absolute;
-    //     top: 0;
-    //     left: 0;
-    //     display: block;
-    //     z-index: 3;
-    // `;
-    
     commentsWrap.appendChild(userStrokesImgElement);
 }
 

@@ -8,6 +8,13 @@ const comments = menu.querySelector('.comments');
 const draw = menu.querySelector('.draw');
 const share = menu.querySelector('.share');
 const modeHTMLElements = Array.from( menu.querySelectorAll('.mode') );
+
+const imageLoader = document.querySelector('.image-loader');
+const errorMessage = document.querySelector('.error__message');
+const errorNode = document.querySelector('.error');
+const commentsOnInput = document.querySelector('#comments-on');
+const commentsOffInput = document.querySelector('#comments-off');
+
 let picID;
 const shownComments = {};
 let wsGlobal = null;
@@ -106,6 +113,7 @@ function checkMenuRumple() {
     }
 }
 
+// проверяем корректность отображения меню при каждой перерисовке страницы
 function checkMenuRumpleTick() {
     checkMenuRumple();
     window.requestAnimationFrame(checkMenuRumpleTick);
@@ -114,11 +122,11 @@ function checkMenuRumpleTick() {
 checkMenuRumpleTick();
 
 // ~~~~~~~~~~~~~~~~~~~~ Показывать/не покаазывать комментарии ~~~~~~~~~~~~~~~~~~~
-wrap.querySelector('#comments-on').addEventListener('change', checkCommentsShow);
-wrap.querySelector('#comments-off').addEventListener('change', checkCommentsShow);
+commentsOnInput.addEventListener('change', checkCommentsShow);
+commentsOffInput.addEventListener('change', checkCommentsShow);
 
 function checkCommentsShow() {
-    if (wrap.querySelector('#comments-on').checked) {
+    if (commentsOnInput.checked) {
         Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
             form.style.display = '';
         });
@@ -148,13 +156,13 @@ if (regexp.exec(document.location.search)) {
     picID = regexp.exec(document.location.search)[1];
 
     menu.style.display = 'none';
-    wrap.querySelector('.image-loader').style.display = '';
+    imageLoader.style.display = '';
 
     fetch(`https://neto-api.herokuapp.com/pic/${picID}`)
     .then(res => {
         if (res.status >= 400) throw res.statusText;
         menu.style.display = '';
-        wrap.querySelector('.image-loader').style.display = 'none';
+        imageLoader.style.display = 'none';
         return res.json();
     })
 
@@ -167,9 +175,9 @@ if (regexp.exec(document.location.search)) {
     })
     .catch(err => {
         menu.style.display = 'none';
-        wrap.querySelector('.image-loader').style.display = 'none';
-        wrap.querySelector('.error__message').textContent = err;
-        wrap.querySelector('.error').style.display = '';
+        imageLoader.style.display = 'none';
+        errorMessage.textContent = err;
+        errorNode.style.display = '';
         console.log(err);
     });  
 }
@@ -236,8 +244,8 @@ menu.querySelector('.new').insertBefore(fileInput, menu.querySelector('.new').fi
 wrap.addEventListener('drop', event => {
     event.preventDefault();
     if (picID) {
-        wrap.querySelector('.error__message').textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом "Загрузить новое" в меню.';
-        wrap.querySelector('.error').style.display = '';
+        errorMessage.textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом "Загрузить новое" в меню.';
+        errorNode.style.display = '';
         return;
     }
     const file = event.dataTransfer.files[0];
@@ -261,8 +269,8 @@ function publishImage(file) {
     }
 
     if (fileTypeIsIncorrect(file.type)) {
-        wrap.querySelector('.error__message').textContent = 'Неверный формат файла. Пожалуйста, выберите изображение в формате .jpg или .png.';
-        wrap.querySelector('.error').style.display = '';
+        errorMessage.textContent = 'Неверный формат файла. Пожалуйста, выберите изображение в формате .jpg или .png.';
+        errorNode.style.display = '';
         return;
     }
     
@@ -270,9 +278,9 @@ function publishImage(file) {
     formData.append('title', file.name);
     formData.append('image', file);
 
-    wrap.querySelector('.error').style.display = 'none';
+    errorNode.style.display = 'none';
     menu.style.display = 'none';
-    wrap.querySelector('.image-loader').style.display = '';
+    imageLoader.style.display = '';
 
     fetch('https://neto-api.herokuapp.com/pic', {
         body: formData,
@@ -280,9 +288,8 @@ function publishImage(file) {
         method: 'POST',
     })
     .then(res => {
-        Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => form.remove());
         menu.style.display = '';
-        wrap.querySelector('.image-loader').style.display = 'none';
+        imageLoader.style.display = 'none';
         if (res.status >= 400) throw res.statusText;
         return res.json();
     })
@@ -299,9 +306,9 @@ function publishImage(file) {
     })
     .catch(err => {
         menu.style.display = 'none';
-        wrap.querySelector('.image-loader').style.display = 'none';
-        wrap.querySelector('.error__message').textContent = err;
-        wrap.querySelector('.error').style.display = '';
+        imageLoader.style.display = 'none';
+        errorMessage.textContent = err;
+        errorNode.style.display = '';
         console.log(err);
     });
 }
@@ -432,7 +439,7 @@ function minimizeAllCommentFormsExcept(currentForm = null) {
 // создание нового комментария на холсте
 canvas.addEventListener('click', event => {
     // проверяем, что включен режим "Комментирование" и стоит галочка "Показывать комментарии"
-    if (comments.dataset.state !== 'selected' || !wrap.querySelector('#comments-on').checked) return;
+    if (comments.dataset.state !== 'selected' || !commentsOnInput.checked) return;
 
     deleteAllBlankCommentFormsExcept();
     minimizeAllCommentFormsExcept();
@@ -489,7 +496,7 @@ function updateComments(newComments) {
             addMsgToForm(newComments[id], newForm);
             commentsWrap.appendChild(newForm);
 
-            if (!wrap.querySelector('#comments-on').checked) {
+            if (!commentsOnInput.checked) {
                 newForm.style.display = 'none';
             }
         }

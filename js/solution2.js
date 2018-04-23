@@ -18,10 +18,10 @@ const commentsOffInput = document.querySelector('#comments-off');
 let picID;
 const shownComments = {};
 let wsGlobal = null;
-const commentsWrap = document.createElement('div');
+
 const canvas = document.createElement('canvas');
-const userStrokesImgElement = document.createElement('img');
-let curvesNumberToRemoveNextTime = 0;
+let commentsWrap;
+let userStrokesImgElement;
 
 
 // преобразование timestamp в строку необходимого формата для отображения времени
@@ -340,6 +340,8 @@ menu.querySelector('.menu_copy').addEventListener('click', () => {
 
 // создаем div, в который будем помещать комментарии (нужно, чтобы координаты комментариев можно было зафиксировать относительно этого div, а не документа, чтобы комментарии не съезжали при изменении окна браузера)
 function createCommentsWrap() {
+    commentsWrap = document.createElement('div');
+
     const width = getComputedStyle(wrap.querySelector('.current-image')).width;
     const height = getComputedStyle(wrap.querySelector('.current-image')).height;
 
@@ -348,7 +350,6 @@ function createCommentsWrap() {
     commentsWrap.classList.add('comments-wrap');
     wrap.appendChild(commentsWrap);
 
-    
     commentsWrap.addEventListener('click', event => {
         if (event.target.closest('.comments__form')) {
             const currentForm = event.target.closest('.comments__form');
@@ -563,6 +564,8 @@ Array.from(menu.querySelectorAll('.menu__color')).forEach(colorInput => {
 
 
 function createCanvas() {
+    // canvas = document.createElement('canvas');
+
     const width = getComputedStyle(wrap.querySelector('.current-image')).width.slice(0, -2);
     const height = getComputedStyle(wrap.querySelector('.current-image')).height.slice(0, -2);
     canvas.width = width;
@@ -585,6 +588,7 @@ let curves = [];
 let drawing = false;
 let needsRepaint = false;
 let currColor = '#6cbe47';
+let curvesNumberToRemoveNextTime = 0;
 
 // curves and figures
 function circle(point) {
@@ -689,6 +693,7 @@ tick();
 // ~~~~~~~~~~~~~~~~~ Рисование: взаимодействие с сервером ~~~~~~~~~~~~~~~~~~~
 
 function createUserStrokesImgElement() {
+    userStrokesImgElement = document.createElement('img');
     userStrokesImgElement.src = './pic/transparent.png';
     userStrokesImgElement.classList.add('user-strokes');
     commentsWrap.appendChild(userStrokesImgElement);
@@ -736,11 +741,3 @@ function drawUsersStrokes(url) {
     userStrokesImgElement.src = url;
     console.log(url);
 }
-
-// canvas.addEventListener('mousedown', (event) => {
-//     console.log('offsetX', event.offsetX, event.offsetY);
-//     console.log('layerX', event.layerX, event.layerY);
-//     console.log('clientX', event.clientX, event.clientY);
-//     console.log('pageX', event.pageX, event.pageY);
-// });
-

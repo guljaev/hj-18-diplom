@@ -506,8 +506,10 @@ function updateComments(newComments) {
 }
 
 // добавляем новое сообщение в форму, так чтобы все сообщения внутри формы шли по порядку возрастания data-timestamp
+const POSITIVE_INFINITY = 9999999999999;
+
 function addMsgToForm(newMsg, form) {
-    let timestamp = 9999999999999;
+    let timestamp = POSITIVE_INFINITY;
     let theNearestLowerDiv = form.querySelector('.loader').parentElement;
 
     Array.from(form.querySelectorAll('[data-timestamp]')).forEach(msgDiv => {

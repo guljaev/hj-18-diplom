@@ -82,6 +82,24 @@ body {
   z-index: 0;
 }
 
+.comments-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+}
+
+.user-strokes {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  z-index: 3;
+}
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~ иконки на панели ~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 .drag {
@@ -137,6 +155,15 @@ body {
   width: 27px;
   height: 30px;
   background-position: -56px -1px;
+}
+
+.menu__fileloader {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
 }
 
 .comments-icon {

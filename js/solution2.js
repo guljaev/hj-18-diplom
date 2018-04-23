@@ -225,14 +225,16 @@ function treatAjaxServerAnswer(res) {
 const fileInput = document.createElement('input');
 fileInput.setAttribute('type', 'file');
 fileInput.setAttribute('accept', 'image/jpeg, image/png');
-fileInput.style.cssText = `
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    opacity: 0;
-`;
+
+fileInput.classList.add('menu__fileloader');
+// fileInput.style.cssText = `
+//     position: absolute;
+//     width: 100%;
+//     height: 100%;
+//     top: 0;
+//     left: 0;
+//     opacity: 0;
+// `;
 fileInput.addEventListener('change', event => {
     const file = event.currentTarget.files[0];
     publishImage(file);
@@ -335,15 +337,20 @@ menu.querySelector('input.menu_copy').addEventListener('click', () => {
 function createCommentsWrap() {
     const width = getComputedStyle(wrap.querySelector('.current-image')).width;
     const height = getComputedStyle(wrap.querySelector('.current-image')).height;
-    commentsWrap.style.cssText = `
-        width: ${width};
-        height: ${height};
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: block;
-    `;
+
+    commentsWrap.style.width = width;
+    commentsWrap.style.height = height;
+    commentsWrap.classList.add('comments-wrap');
+    // commentsWrap.style.cssText = `
+    //     width: ${width};
+    //     height: ${height};
+    //     position: absolute;
+    //     top: 50%;
+    //     left: 50%;
+    //     transform: translate(-50%, -50%);
+    //     display: block;
+    // `;
+
     wrap.appendChild(commentsWrap);
 
     
@@ -400,7 +407,7 @@ function createBlankForm() {
     });
 
     // кнопка "Отправить"
-    newForm.addEventListener('submit', (event) => {
+    newForm.addEventListener('submit', event => {
         event.preventDefault();
         const message = newForm.querySelector('.comments__input').value;
         const body = `message=${encodeURIComponent(message)}&left=${encodeURIComponent(newForm.dataset.left)}&top=${encodeURIComponent(newForm.dataset.top)}`;
@@ -450,7 +457,7 @@ function minimizeAllCommentFormsExcept(currentForm = null) {
 }
 
 // создание нового комментария на холсте
-canvas.addEventListener('click', (event) => {
+canvas.addEventListener('click', event => {
     // проверяем, что включен режим "Комментирование" и стоит галочка "Показывать комментарии"
     if (comments.dataset.state !== 'selected' || !wrap.querySelector('#comments-on').checked) return;
 
@@ -598,15 +605,18 @@ function createCanvas() {
     canvas.width = width;
     canvas.height = height;
 
-    canvas.style.cssText = `
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        display: block;
-        z-index: 5;
-    `;
+    canvas.classList.add('user-strokes');
+    canvas.style.zIndex = 5;
+    // canvas.style.cssText = `
+    //     width: 100%;
+    //     height: 100%;
+    //     position: absolute;
+    //     top: 0;
+    //     left: 0;
+    //     display: block;
+    //     z-index: 5;
+    // `;
+
     commentsWrap.appendChild(canvas);
 
     curves = [];
@@ -655,7 +665,7 @@ function makePoint(x, y) {
     return [x, y];
 }
 
-canvas.addEventListener('mousedown', (evt) => {
+canvas.addEventListener('mousedown', event => {
     if (draw.dataset.state !== 'selected') return;
 
     drawing = true;
@@ -663,25 +673,25 @@ canvas.addEventListener('mousedown', (evt) => {
     const curve = []; // create a new curve
     curve.color = currColor; // define color of the curve
 
-    curve.push(makePoint(evt.offsetX, evt.offsetY)); // add a new point
+    curve.push(makePoint(event.offsetX, event.offsetY)); // add a new point
     curves.push(curve); // add the curve to the array of curves
     needsRepaint = true;
 });
 
-canvas.addEventListener('mouseup', (evt) => {
+canvas.addEventListener('mouseup', () => {
     drawing = false;
 });
 
-canvas.addEventListener('mouseleave', (evt) => {
+canvas.addEventListener('mouseleave', () => {
     drawing = false;
 });
 
-canvas.addEventListener('mousemove', (evt) => {
+canvas.addEventListener('mousemove', event => {
     if (draw.dataset.state !== 'selected') return;
 
     if (drawing) {
         // add a point
-        const point = makePoint(evt.offsetX, evt.offsetY);
+        const point = makePoint(event.offsetX, event.offsetY);
         curves[curves.length - 1].push(point);
         needsRepaint = true;
     }
@@ -694,7 +704,7 @@ function repaint() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     curves
-        .forEach((curve) => {
+        .forEach(curve => {
             // choose used color
             ctx.strokeStyle = curve.color;
             ctx.fillStyle = curve.color;
@@ -726,15 +736,18 @@ tick();
 
 function createUserStrokesImgElement() {
     userStrokesImgElement.src = './pic/transparent.png';
-    userStrokesImgElement.style.cssText = `
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        display: block;
-        z-index: 3;
-    `;
+
+    userStrokesImgElement.classList.add('user-strokes');
+    // userStrokesImgElement.style.cssText = `
+    //     width: 100%;
+    //     height: 100%;
+    //     position: absolute;
+    //     top: 0;
+    //     left: 0;
+    //     display: block;
+    //     z-index: 3;
+    // `;
+    
     commentsWrap.appendChild(userStrokesImgElement);
 }
 

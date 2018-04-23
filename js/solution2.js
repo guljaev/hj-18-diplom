@@ -182,7 +182,7 @@ function treatAjaxServerAnswer(res) {
 
     // сам не смог разобраться с формированием адреса ссылки, и что по ней должно открываться =( где можно почитать про то, из чего формируется адрес, а какие его части можно использовать при открытии страницы?
     const url = document.location.href.split('?')[0] + `?id=${res.id}`;
-    menu.querySelector('input.menu__url').value = url;
+    menu.querySelector('.menu__url').value = url;
     
     // после загрузки картинки..
     wrap.querySelector('.current-image').addEventListener('load', () => {
@@ -280,7 +280,7 @@ function publishImage(file) {
         method: 'POST',
     })
     .then(res => {
-        Array.from(wrap.querySelectorAll('form.comments__form')).forEach(form => form.remove());
+        Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => form.remove());
         menu.style.display = '';
         wrap.querySelector('.image-loader').style.display = 'none';
         if (res.status >= 400) throw res.statusText;
@@ -324,8 +324,8 @@ modeHTMLElements.forEach(elem => {
 
 // копирование в буфер обмена из режима "Поделиться"
 
-menu.querySelector('input.menu_copy').addEventListener('click', () => {
-    menu.querySelector('input.menu__url').select();
+menu.querySelector('.menu_copy').addEventListener('click', () => {
+    menu.querySelector('.menu__url').select();
     document.execCommand('copy');
 });
 
@@ -343,10 +343,10 @@ function createCommentsWrap() {
 
     
     commentsWrap.addEventListener('click', event => {
-        if (event.target.closest('form.comments__form')) {
-            const currentForm = event.target.closest('form.comments__form');
+        if (event.target.closest('.comments__form')) {
+            const currentForm = event.target.closest('.comments__form');
             // отображаем интересующие комментарии (по клику) поверх остальных
-            Array.from(commentsWrap.querySelectorAll('form.comments__form')).forEach(form => {
+            Array.from(commentsWrap.querySelectorAll('.comments__form')).forEach(form => {
                 form.style.zIndex = 10;
             });
             currentForm.style.zIndex = 11;

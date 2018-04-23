@@ -356,26 +356,11 @@ function createCommentsWrap() {
 
 // Создаем новый элемент form для комментариев
 function createBlankForm() {
-    const newForm = document.createElement('form');
+    const newForm = wrap.querySelector('.comments__form__sample').cloneNode(true);
+    newForm.classList.remove('comments__form__sample');
     newForm.classList.add('comments__form');
+    newForm.style.display = '';
     newForm.style.zIndex = 10;
-    newForm.innerHTML = `
-        <span class="comments__marker"></span><input type="checkbox" class="comments__marker-checkbox">
-        <div class="comments__body">
-            <div class="comment" style="display: none;">
-                <div class="loader">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>            
-            </div>          
-            <textarea class="comments__input" type="text" placeholder="Напишите ответ..."></textarea>
-            <input class="comments__close" type="button" value="Закрыть">
-            <input class="comments__submit" type="submit" value="Отправить">
-        </div>
-    `;
 
     // кнопка "Закрыть"
     newForm.querySelector('.comments__close').addEventListener('click', () => {

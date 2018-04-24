@@ -38,7 +38,7 @@ let userStrokesImgElement;
 
 // ~~~~~~~~~~~~~~ Перетаскивание меню ~~~~~~~~~~~~~~~~~
 
-// начальное положению меню
+// начальное положение меню
 menu.style.top = '30px';
 menu.style.left = '30px';
 
@@ -341,55 +341,36 @@ function publishImage(file) {
 
 // ~~~~~~~~~~~~~~ Комментирование ~~~~~~~~~~~~~~~
 
-// удаляем все пустые комментарии, кроме currentForm
-function deleteAllBlankCommentFormsExcept(currentForm = null) {
-    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
-        if (form.querySelectorAll('.comment').length < 2 && form !== currentForm) {
-            // если комментариев нет, и выбран не текущий комментарий, удалаем форму
-            form.remove();
-        }
-    });
-}
-
-// сворачиваем все пустые комментарии, кроме currentForm
-function minimizeAllCommentFormsExcept(currentForm = null) {
-    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
-        if (form !== currentForm) {
-            // если выбран не текущий комментарий, сворачиваем его
-            form.querySelector('.comments__marker-checkbox').checked = false;
-        }
-    });
-}
-
 // создаем div, в который будем помещать комментарии (нужно, чтобы координаты комментариев можно было зафиксировать относительно этого div, а не документа, чтобы комментарии не съезжали при изменении окна браузера)
 function createCommentsWrap() {
     if (!commentsWrap) {
         commentsWrap = document.createElement('div');
-        commentsWrap.classList.add('comments-wrap');
-        wrap.appendChild(commentsWrap);
-
-        commentsWrap.addEventListener('click', event => {
-            if (event.target.closest('.comments__form')) {
-                const currentForm = event.target.closest('.comments__form');
-                // отображаем интересующие комментарии (по клику) поверх остальных
-                Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
-                    form.style.zIndex = 10;
-                });
-                currentForm.style.zIndex = 11;
-
-                // удаляем все пустые комментарии, помимо того, на который кликнули
-                deleteAllBlankCommentFormsExcept(currentForm);
-
-                // сворачиваем все комментарии кроме текущего
-                minimizeAllCommentFormsExcept(currentForm);
-            }
-        });
     }
 
     const width = getComputedStyle(currentImage).width;
     const height = getComputedStyle(currentImage).height;
+
     commentsWrap.style.width = width;
     commentsWrap.style.height = height;
+    commentsWrap.classList.add('comments-wrap');
+    wrap.appendChild(commentsWrap);
+
+    commentsWrap.addEventListener('click', event => {
+        if (event.target.closest('.comments__form')) {
+            const currentForm = event.target.closest('.comments__form');
+            // отображаем интересующие комментарии (по клику) поверх остальных
+            Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+                form.style.zIndex = 10;
+            });
+            currentForm.style.zIndex = 11;
+
+            // удаляем все пустые комментарии, помимо того, на который кликнули
+            deleteAllBlankCommentFormsExcept(currentForm);
+
+            // сворачиваем все комментарии кроме текущего
+            minimizeAllCommentFormsExcept(currentForm);
+        }
+    });
 }
 
 // Создаем новый элемент form для комментариев
@@ -441,6 +422,26 @@ function createBlankForm() {
     });
 
     return newForm;
+}
+
+// удаляем все пустые комментарии, кроме currentForm
+function deleteAllBlankCommentFormsExcept(currentForm = null) {
+    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+        if (form.querySelectorAll('.comment').length < 2 && form !== currentForm) {
+            // если комментариев нет, и выбран не текущий комментарий, удалаем форму
+            form.remove();
+        }
+    });
+}
+
+// сворачиваем все пустые комментарии, кроме currentForm
+function minimizeAllCommentFormsExcept(currentForm = null) {
+    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+        if (form !== currentForm) {
+            // если выбран не текущий комментарий, сворачиваем его
+            form.querySelector('.comments__marker-checkbox').checked = false;
+        }
+    });
 }
 
 // создание нового комментария на холсте
@@ -524,6 +525,7 @@ function addMsgToForm(newMsg, form) {
             minute: 'numeric',
             second: 'numeric'
         };
+    
         const date = new Date(timestamp);
         const dateStr = date.toLocaleString(options);
         return dateStr.slice(0, 6) + dateStr.slice(8, 10) + dateStr.slice(11);
@@ -591,6 +593,7 @@ function createCanvas() {
 
     canvas.classList.add('user-strokes');
     canvas.style.zIndex = 5;
+
     commentsWrap.appendChild(canvas);
 
     curves = [];
@@ -720,10 +723,10 @@ tick();
 function createUserStrokesImgElement() {
     if (!userStrokesImgElement) {
         userStrokesImgElement = document.createElement('img');
-        userStrokesImgElement.classList.add('user-strokes');
-        commentsWrap.appendChild(userStrokesImgElement);
     }
     userStrokesImgElement.src = './pic/transparent.png';
+    userStrokesImgElement.classList.add('user-strokes');
+    commentsWrap.appendChild(userStrokesImgElement);
 }
 
 // используем, чтобы посылать данные на сервер не чаще 1 раза в несколько секунд

@@ -601,12 +601,15 @@ function createCanvas() {
     currColor = '#6cbe47';
 }
 
+// переменные для рисования
 const BRUSH_RADIUS = 4;
 const ctx = canvas.getContext('2d');
 let curves = [];
 let drawing = false;
 let needsRepaint = false;
 let currColor = '#6cbe47';
+
+// количество кривых в массиве curves, которые уже передали на сервер, и которые можно стереть с канвас (чтобы не передавать повторно)
 let curvesNumberToRemoveNextTime = 0;
 
 // --- кривые и фигуры ---
@@ -641,12 +644,13 @@ function smoothCurve(points) {
     ctx.stroke();
 }
 
-// --- events ---
-
 // задаем координаты точки в виде массива
 function makePoint(x, y) {
     return [x, y];
 }
+
+
+// --- events ---
 
 canvas.addEventListener('mousedown', event => {
     if (draw.dataset.state !== 'selected') return;
@@ -713,7 +717,6 @@ function tick() {
 
     window.requestAnimationFrame(tick);
 }
-
 tick();
 
 // ~~~~~~~~~~~~~~~~~ Рисование: взаимодействие с сервером ~~~~~~~~~~~~~~~~~~~

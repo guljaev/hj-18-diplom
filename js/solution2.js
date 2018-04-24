@@ -35,12 +35,6 @@ let commentsWrap;
 const canvas = document.createElement('canvas');
 let userStrokesImgElement;
 
-// Состояние меню "Публикация" (по умолчанию)
-wrap.dataset.state = '';
-menu.dataset.state = 'initial';
-menu.style.top = '30px';
-menu.style.left = '30px';
-
 // ~~~ Преобразование timestamp в строку необходимого формата для отображения времени ~~~
 function getDate(timestamp) {
     const options = {
@@ -58,6 +52,11 @@ function getDate(timestamp) {
 }
 
 // ~~~~~~~~~~~~~~ Перетаскивание меню ~~~~~~~~~~~~~~~~~
+
+// начальное положению меню
+menu.style.top = '30px';
+menu.style.left = '30px';
+
 let movedPiece = null;
 let shiftX = 0;
 let shiftY = 0;

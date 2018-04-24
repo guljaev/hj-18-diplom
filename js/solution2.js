@@ -3,29 +3,45 @@
 const wrap = document.querySelector('.wrap');
 const currentImage = document.querySelector('.current-image');
 
+// элементы меню
 const menu = document.querySelector('.menu');
 const burger = document.querySelector('.burger');
 const comments = document.querySelector('.comments');
 const draw = document.querySelector('.draw');
 const share = document.querySelector('.share');
+const menuUrl = document.querySelector('.menu__url');
 const modeHTMLElements = Array.from( document.querySelectorAll('.mode') );
 
+// предупреждения и ошибки
 const imageLoader = document.querySelector('.image-loader');
 const errorMessage = document.querySelector('.error__message');
 const errorNode = document.querySelector('.error');
+
+// переключатели отображения комментариев
 const commentsOnInput = document.querySelector('#comments-on');
 const commentsOffInput = document.querySelector('#comments-off');
 
+// ID картинки
 let picID;
+
+// база отображенных комментариев
 const shownComments = {};
+
+// ссылка на WebSocket
 let wsGlobal = null;
 
-const canvas = document.createElement('canvas');
+// контейнер, в который помещаются комментарии, холст и рисунки пользователей
 let commentsWrap;
+const canvas = document.createElement('canvas');
 let userStrokesImgElement;
 
+// Состояние меню "Публикация" (по умолчанию)
+wrap.dataset.state = '';
+menu.dataset.state = 'initial';
+menu.style.top = '30px';
+menu.style.left = '30px';
 
-// преобразование timestamp в строку необходимого формата для отображения времени
+// ~~~ Преобразование timestamp в строку необходимого формата для отображения времени ~~~
 function getDate(timestamp) {
     const options = {
         day: 'numeric',
@@ -41,7 +57,7 @@ function getDate(timestamp) {
     return dateStr.slice(0, 6) + dateStr.slice(8, 10) + dateStr.slice(11);
 }
 
-// Dragability
+// ~~~~~~~~~~~~~~ Перетаскивание меню ~~~~~~~~~~~~~~~~~
 let movedPiece = null;
 let shiftX = 0;
 let shiftY = 0;
@@ -109,6 +125,8 @@ function throttle(callback) {
     };
 }
 
+// ~~~~~~~~~~~~~ Сдвигание меню, если ему не хватает длины ~~~~~~~~~~~~
+
 // если меню "скукоживается" (не хватает длины), смещаем его по горизонатали, чтобы оно встало рядом с правым краем изображения
 function checkMenuRumple() {
     if (menu.offsetHeight > 100) {
@@ -123,33 +141,48 @@ function checkMenuRumpleTick() {
     checkMenuRumple();
     window.requestAnimationFrame(checkMenuRumpleTick);
 }
-
 checkMenuRumpleTick();
 
-// ~~~~~~~~~~~~~~~~~~~~ Показывать/не покаазывать комментарии ~~~~~~~~~~~~~~~~~~~
+
+// ~~~~~~~~~~~~~~~~~~~~ Показывать/не показывать комментарии ~~~~~~~~~~~~~~~~~~~
 commentsOnInput.addEventListener('change', checkCommentsShow);
 commentsOffInput.addEventListener('change', checkCommentsShow);
 
 function checkCommentsShow() {
     if (commentsOnInput.checked) {
         Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
-            form.style.display = '';
+            form.style.display = ''; //comments on
         });
-        // console.log('comments on');
     } else {
         Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
-            form.style.display = 'none';
+            form.style.display = 'none'; //comments off
         });
-        // console.log('comments off');
     }
 }
 
-// ~~~~~~~~~~~~~~Состояние меню "Публикация" (по умолчанию)~~~~~~~~~~~~~~~
+// ~~~~~~~~ Переключение режимов (вид меню) ~~~~~~~~~
 
-wrap.dataset.state = '';
-menu.dataset.state = 'initial';
-menu.style.top = '30px';
-menu.style.left = '30px';
+burger.addEventListener('click', () => {
+    menu.dataset.state = 'default';
+    modeHTMLElements.forEach(elem => elem.dataset.state = '');
+});
+
+modeHTMLElements.forEach(elem => {
+    if (!elem.classList.contains('new')) {
+        elem.addEventListener('click', (event) => {
+            menu.dataset.state = 'selected';
+            event.currentTarget.dataset.state = 'selected';
+        });
+    }
+});
+
+// ~~~~ Копирование в буфер обмена из режима "Поделиться" ~~~~
+
+document.querySelector('.menu_copy').addEventListener('click', () => {
+    menuUrl.select();
+    document.execCommand('copy');
+});
+
 
 // ~~~~~~~~~~~~~~ Отправка запроса на сервер ~~~~~~~~~~~~~~~
 
@@ -172,7 +205,6 @@ if (regexp.exec(document.location.search)) {
     .then(res => {
         treatAjaxServerAnswer(res);
         // переходим в режим "Комментирование"
-        menu.dataset.state = 'selected';
         modeHTMLElements.forEach(elem => elem.dataset.state = '');
         comments.dataset.state = 'selected';
     })
@@ -192,12 +224,12 @@ function treatAjaxServerAnswer(res) {
     modeHTMLElements.forEach(elem => elem.dataset.state = '');
     share.dataset.state = 'selected';
 
-    // сам не смог разобраться с формированием адреса ссылки, и что по ней должно открываться =( где можно почитать про то, из чего формируется адрес, а какие его части можно использовать при открытии страницы?
+    // формируем адрес ссылки
     const url = document.location.href.split('?')[0] + `?id=${res.id}`;
-    document.querySelector('.menu__url').value = url;
+    menuUrl.value = url;
     
     // после загрузки картинки..
-    document.querySelector('.current-image').addEventListener('load', () => {
+    currentImage.addEventListener('load', () => {
         // создаем div по размерам картинки, чтобы вкладывать в него комментарии, canvas и img для отрисовки данных от сервера
         createCommentsWrap();
 
@@ -209,7 +241,7 @@ function treatAjaxServerAnswer(res) {
         updateComments(res.comments);
         drawUsersStrokes(res.mask);
     });
-    document.querySelector('.current-image').src = res.url;
+    currentImage.src = res.url;
     
     // создаем соединение вэбсокет
     const ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${res.id}`);
@@ -228,7 +260,6 @@ function treatAjaxServerAnswer(res) {
     });
     ws.addEventListener('error', error => {
         console.log('ошибка вэбсокета');
-        throw error;
     });
     wsGlobal = ws;
 }
@@ -323,28 +354,6 @@ function publishImage(file) {
     });
 }
 
-// ~~~~~~~~ переключение режимов (вид меню) ~~~~~~~~~
-
-burger.addEventListener('click', () => {
-    menu.dataset.state = 'default';
-    modeHTMLElements.forEach(elem => elem.dataset.state = '');
-});
-
-modeHTMLElements.forEach(elem => {
-    if (!elem.classList.contains('new')) {
-        elem.addEventListener('click', (event) => {
-            menu.dataset.state = 'selected';
-            event.currentTarget.dataset.state = 'selected';
-        });
-    }
-});
-
-// копирование в буфер обмена из режима "Поделиться"
-
-document.querySelector('.menu_copy').addEventListener('click', () => {
-    document.querySelector('.menu__url').select();
-    document.execCommand('copy');
-});
 
 // ~~~~~~~~~~~~~~ Комментирование ~~~~~~~~~~~~~~~
 
@@ -354,8 +363,8 @@ function createCommentsWrap() {
         commentsWrap = document.createElement('div');
     }
 
-    const width = getComputedStyle(document.querySelector('.current-image')).width;
-    const height = getComputedStyle(document.querySelector('.current-image')).height;
+    const width = getComputedStyle(currentImage).width;
+    const height = getComputedStyle(currentImage).height;
 
     commentsWrap.style.width = width;
     commentsWrap.style.height = height;
@@ -472,7 +481,7 @@ canvas.addEventListener('click', event => {
     newComment.style.left = coordX + 'px';
     newComment.style.top = coordY + 'px';
 
-    // и в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно current-image)
+    // и в каждую форму добавляем атрибуты data-left и data-top (координаты левого верхнего угла формы относительно currentImage)
     newComment.dataset.left = coordX;
     newComment.dataset.top = coordY;
 });
@@ -577,8 +586,8 @@ Array.from(document.querySelectorAll('.menu__color')).forEach(colorInput => {
 
 // задаем все атрибуты холста и вставляем его в DOM
 function createCanvas() {
-    const width = getComputedStyle(document.querySelector('.current-image')).width.slice(0, -2);
-    const height = getComputedStyle(document.querySelector('.current-image')).height.slice(0, -2);
+    const width = getComputedStyle(currentImage).width.slice(0, -2);
+    const height = getComputedStyle(currentImage).height.slice(0, -2);
     canvas.width = width;
     canvas.height = height;
 

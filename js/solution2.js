@@ -2,12 +2,12 @@
 
 const wrap = document.querySelector('.wrap');
 wrap.querySelector('.current-image').src = '';
-const menu = wrap.querySelector('.menu');
-const burger = menu.querySelector('.burger');
-const comments = menu.querySelector('.comments');
-const draw = menu.querySelector('.draw');
-const share = menu.querySelector('.share');
-const modeHTMLElements = Array.from( menu.querySelectorAll('.mode') );
+const menu = document.querySelector('.menu');
+const burger = document.querySelector('.burger');
+const comments = document.querySelector('.comments');
+const draw = document.querySelector('.draw');
+const share = document.querySelector('.share');
+const modeHTMLElements = Array.from( document.querySelectorAll('.mode') );
 
 const imageLoader = document.querySelector('.image-loader');
 const errorMessage = document.querySelector('.error__message');
@@ -288,6 +288,11 @@ function publishImage(file) {
         method: 'POST',
     })
     .then(res => {
+        // стираем комментарии, которые могли остаться от предыдущей картинки
+        Array.from(document.querySelectorAll('.comments__form')).forEach(form => form.remove());
+        // стираем следы рисования от предыдущей картинки
+        if (userStrokesImgElement) userStrokesImgElement.src = './pic/transparent.png';
+
         menu.style.display = '';
         imageLoader.style.display = 'none';
         if (res.status >= 400) throw res.statusText;
@@ -340,7 +345,9 @@ menu.querySelector('.menu_copy').addEventListener('click', () => {
 
 // создаем div, в который будем помещать комментарии (нужно, чтобы координаты комментариев можно было зафиксировать относительно этого div, а не документа, чтобы комментарии не съезжали при изменении окна браузера)
 function createCommentsWrap() {
-    commentsWrap = document.createElement('div');
+    if (!commentsWrap) {
+        commentsWrap = document.createElement('div');
+    }
 
     const width = getComputedStyle(wrap.querySelector('.current-image')).width;
     const height = getComputedStyle(wrap.querySelector('.current-image')).height;
@@ -693,7 +700,9 @@ tick();
 // ~~~~~~~~~~~~~~~~~ Рисование: взаимодействие с сервером ~~~~~~~~~~~~~~~~~~~
 
 function createUserStrokesImgElement() {
-    userStrokesImgElement = document.createElement('img');
+    if (!userStrokesImgElement) {
+        userStrokesImgElement = document.createElement('img');
+    }
     userStrokesImgElement.src = './pic/transparent.png';
     userStrokesImgElement.classList.add('user-strokes');
     commentsWrap.appendChild(userStrokesImgElement);

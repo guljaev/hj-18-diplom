@@ -35,21 +35,6 @@ let commentsWrap;
 const canvas = document.createElement('canvas');
 let userStrokesImgElement;
 
-// ~~~ Преобразование timestamp в строку необходимого формата для отображения времени ~~~
-function getDate(timestamp) {
-    const options = {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric'
-    };
-  
-    const date = new Date(timestamp);
-    const dateStr = date.toLocaleString(options);
-    return dateStr.slice(0, 6) + dateStr.slice(8, 10) + dateStr.slice(11);
-}
 
 // ~~~~~~~~~~~~~~ Перетаскивание меню ~~~~~~~~~~~~~~~~~
 
@@ -530,6 +515,21 @@ function updateComments(newComments) {
 const POSITIVE_INFINITY = 9999999999999;
 
 function addMsgToForm(newMsg, form) {
+    // преобразуем timestamp в строку необходимого формата для отображения времени
+    function getDate(timestamp) {
+        const options = {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric'
+        };
+        const date = new Date(timestamp);
+        const dateStr = date.toLocaleString(options);
+        return dateStr.slice(0, 6) + dateStr.slice(8, 10) + dateStr.slice(11);
+    }
+    
     let timestamp = POSITIVE_INFINITY;
     let theNearestLowerDiv = form.querySelector('.loader').parentElement;
 

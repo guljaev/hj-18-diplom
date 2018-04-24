@@ -170,37 +170,6 @@ document.querySelector('.menu_copy').addEventListener('click', () => {
 
 // ~~~~~~~~~~~~~~ Отправка запроса на сервер ~~~~~~~~~~~~~~~
 
-// при наличии id внутри ссылки сразу делаем GET-запрос
-const regexp = /id=([^&]+)/i;
-if (regexp.exec(document.location.search)) {
-    picID = regexp.exec(document.location.search)[1];
-
-    menu.style.display = 'none';
-    imageLoader.style.display = '';
-
-    fetch(`https://neto-api.herokuapp.com/pic/${picID}`)
-    .then(res => {
-        if (res.status >= 400) throw res.statusText;
-        menu.style.display = '';
-        imageLoader.style.display = 'none';
-        return res.json();
-    })
-
-    .then(res => {
-        treatAjaxServerAnswer(res);
-        // переходим в режим "Комментирование"
-        modeHTMLElements.forEach(elem => elem.dataset.state = '');
-        comments.dataset.state = 'selected';
-    })
-    .catch(err => {
-        menu.style.display = 'none';
-        imageLoader.style.display = 'none';
-        errorMessage.textContent = err;
-        errorNode.style.display = '';
-        console.log(err);
-    });  
-}
-
 // обработка ответа, пришедшего от сервера по Ajax
 function treatAjaxServerAnswer(res) {
     // переключаем режим меню
@@ -247,30 +216,6 @@ function treatAjaxServerAnswer(res) {
     });
     wsGlobal = ws;
 }
-
-// Возможность загрузки файла изображения
-const fileInput = document.createElement('input');
-fileInput.setAttribute('type', 'file');
-fileInput.setAttribute('accept', 'image/jpeg, image/png');
-fileInput.classList.add('menu__fileloader');
-
-fileInput.addEventListener('change', event => {
-    const file = event.currentTarget.files[0];
-    publishImage(file);
-});
-document.querySelector('.new').insertBefore(fileInput, document.querySelector('.new').firstElementChild);
-
-wrap.addEventListener('drop', event => {
-    event.preventDefault();
-    if (picID) {
-        errorMessage.textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом "Загрузить новое" в меню.';
-        errorNode.style.display = '';
-        return;
-    }
-    const file = event.dataTransfer.files[0];
-    publishImage(file);
-});
-wrap.addEventListener('dragover', event => event.preventDefault());
 
 
 // отправка файла картинки на сервер и получение данных от сервера
@@ -338,6 +283,62 @@ function publishImage(file) {
     });
 }
 
+
+// Возможность загрузки файла изображения через кнопку меню
+const fileInput = document.createElement('input');
+fileInput.setAttribute('type', 'file');
+fileInput.setAttribute('accept', 'image/jpeg, image/png');
+fileInput.classList.add('menu__fileloader');
+
+fileInput.addEventListener('change', event => {
+    const file = event.currentTarget.files[0];
+    publishImage(file);
+});
+document.querySelector('.new').insertBefore(fileInput, document.querySelector('.new').firstElementChild);
+
+// возможность загрузки файла перетаскиванием файла
+wrap.addEventListener('drop', event => {
+    event.preventDefault();
+    if (picID) {
+        errorMessage.textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом "Загрузить новое" в меню.';
+        errorNode.style.display = '';
+        return;
+    }
+    const file = event.dataTransfer.files[0];
+    publishImage(file);
+});
+wrap.addEventListener('dragover', event => event.preventDefault());
+
+// при наличии id внутри ссылки автоматически происходит GET-запрос
+const regexp = /id=([^&]+)/i;
+if (regexp.exec(document.location.search)) {
+    picID = regexp.exec(document.location.search)[1];
+
+    menu.style.display = 'none';
+    imageLoader.style.display = '';
+
+    fetch(`https://neto-api.herokuapp.com/pic/${picID}`)
+    .then(res => {
+        if (res.status >= 400) throw res.statusText;
+        menu.style.display = '';
+        imageLoader.style.display = 'none';
+        return res.json();
+    })
+
+    .then(res => {
+        treatAjaxServerAnswer(res);
+        // переходим в режим "Комментирование"
+        modeHTMLElements.forEach(elem => elem.dataset.state = '');
+        comments.dataset.state = 'selected';
+    })
+    .catch(err => {
+        menu.style.display = 'none';
+        imageLoader.style.display = 'none';
+        errorMessage.textContent = err;
+        errorNode.style.display = '';
+        console.log(err);
+    });  
+}
 
 // ~~~~~~~~~~~~~~ Комментирование ~~~~~~~~~~~~~~~
 

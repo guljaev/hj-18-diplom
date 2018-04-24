@@ -446,7 +446,7 @@ function createBlankForm() {
 }
 
 
-// создание нового комментария на холсте
+// создание нового комментария при клике на холсте
 canvas.addEventListener('click', event => {
     // проверяем, что включен режим "Комментирование" и стоит галочка "Показывать комментарии"
     if (comments.dataset.state !== 'selected' || !commentsOnInput.checked) return;
@@ -561,7 +561,7 @@ function addMsgToForm(newMsg, form) {
     form.querySelector('.comments__body').insertBefore(newMsgDiv, theNearestLowerDiv);
 }
 
-// обработка комментария от вэбсокета (преобразуем к тому же формату, что приходит по AJAX)
+// обработка комментария, пришедшего через вэбсокет (преобразуем к тому же формату, что приходит по AJAX)
 function insertWSComment(wsComment) {
     const wsCommentEdited = {};
     wsCommentEdited[wsComment.id] = {};

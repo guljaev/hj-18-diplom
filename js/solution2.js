@@ -516,7 +516,7 @@ function updateComments(newComments) {
 // добавляем новое сообщение в форму, так чтобы все сообщения внутри формы шли по порядку возрастания data-timestamp
 function addMsgToForm(newMsg, form) {
     const POSITIVE_INFINITY = 9999999999999;
-    
+
     // преобразуем timestamp в строку необходимого формата для отображения времени
     function getDate(timestamp) {
         const options = {
@@ -574,9 +574,6 @@ function insertWSComment(wsComment) {
 }
 
 // ~~~~~~~~~~ Рисование ~~~~~~~~~~~~~~~
-
-// убираю ластик
-document.querySelector('.menu__eraser-wrap').style.display = 'none';
 
 // изменение текущего цвета линий
 Array.from(document.querySelectorAll('.menu__color')).forEach(colorInput => {

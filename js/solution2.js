@@ -342,6 +342,26 @@ if (regexp.exec(document.location.search)) {
 
 // ~~~~~~~~~~~~~~ Комментирование ~~~~~~~~~~~~~~~
 
+// удаляем все пустые комментарии, кроме currentForm
+function deleteAllBlankCommentFormsExcept(currentForm = null) {
+    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+        if (form.querySelectorAll('.comment').length < 2 && form !== currentForm) {
+            // если комментариев нет, и выбран не текущий комментарий, удалаем форму
+            form.remove();
+        }
+    });
+}
+
+// сворачиваем все пустые комментарии, кроме currentForm
+function minimizeAllCommentFormsExcept(currentForm = null) {
+    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+        if (form !== currentForm) {
+            // если выбран не текущий комментарий, сворачиваем его
+            form.querySelector('.comments__marker-checkbox').checked = false;
+        }
+    });
+}
+
 // создаем div, в который будем помещать комментарии (нужно, чтобы координаты комментариев можно было зафиксировать относительно этого div, а не документа, чтобы комментарии не съезжали при изменении окна браузера)
 function createCommentsWrap() {
     if (!commentsWrap) {
@@ -425,25 +445,6 @@ function createBlankForm() {
     return newForm;
 }
 
-// удаляем все пустые комментарии, кроме currentForm
-function deleteAllBlankCommentFormsExcept(currentForm = null) {
-    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
-        if (form.querySelectorAll('.comment').length < 2 && form !== currentForm) {
-            // если комментариев нет, и выбран не текущий комментарий, удалаем форму
-            form.remove();
-        }
-    });
-}
-
-// сворачиваем все пустые комментарии, кроме currentForm
-function minimizeAllCommentFormsExcept(currentForm = null) {
-    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
-        if (form !== currentForm) {
-            // если выбран не текущий комментарий, сворачиваем его
-            form.querySelector('.comments__marker-checkbox').checked = false;
-        }
-    });
-}
 
 // создание нового комментария на холсте
 canvas.addEventListener('click', event => {
@@ -513,9 +514,9 @@ function updateComments(newComments) {
 }
 
 // добавляем новое сообщение в форму, так чтобы все сообщения внутри формы шли по порядку возрастания data-timestamp
-const POSITIVE_INFINITY = 9999999999999;
-
 function addMsgToForm(newMsg, form) {
+    const POSITIVE_INFINITY = 9999999999999;
+    
     // преобразуем timestamp в строку необходимого формата для отображения времени
     function getDate(timestamp) {
         const options = {

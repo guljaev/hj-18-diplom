@@ -40,7 +40,7 @@ function getDate(timestamp) {
     return dateStr.slice(0, 6) + dateStr.slice(8, 10) + dateStr.slice(11);
 }
 
-// dragability
+// Dragability
 let movedPiece = null;
 let shiftX = 0;
 let shiftY = 0;
@@ -53,6 +53,7 @@ document.addEventListener('mousedown', dragStart);
 document.addEventListener('mousemove', throttle(drag));
 document.addEventListener('mouseup', drop);
 
+// вычисляем сдвиг указателя относительно левого верхнего края меню
 function dragStart(event) {
     if (event.target.classList.contains('drag')) {
         movedPiece = menu;
@@ -67,6 +68,7 @@ function dragStart(event) {
     }
 }
 
+// перемещаем меню в соответствии с движением мыши, учитываем ограничения
 function drag(event) {
     if (movedPiece) {
         event.preventDefault();
@@ -85,12 +87,14 @@ function drag(event) {
     }
 }
 
+// заканчиваем движение меню
 function drop() {
     if (movedPiece) {
         movedPiece = null;
     }
 }
 
+// используется для ограничения частоты срабатывания функции drag
 function throttle(callback) {
     let isWaiting = false;
     return function (...rest) {
@@ -139,18 +143,16 @@ function checkCommentsShow() {
     }
 }
 
-// ~~~~~~~~~~~~~~Состояние "Публикация" (по умолчанию)~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~Состояние меню "Публикация" (по умолчанию)~~~~~~~~~~~~~~~
 
 wrap.dataset.state = '';
 menu.dataset.state = 'initial';
-
-// menu.style.top = ( (document.documentElement.clientHeight - menu.offsetHeight) / 2) + 'px';
-// menu.style.left = ( (document.documentElement.clientWidth - menu.offsetWidth) / 2) + 'px';
 menu.style.top = '30px';
 menu.style.left = '30px';
 
+// ~~~~~~~~~~~~~~ Отправка запроса на сервер ~~~~~~~~~~~~~~~
 
-    // при наличии id внутри ссылки сразу делаем GET-запрос
+// при наличии id внутри ссылки сразу делаем GET-запрос
 const regexp = /id=([^&]+)/i;
 if (regexp.exec(document.location.search)) {
     picID = regexp.exec(document.location.search)[1];
@@ -182,6 +184,7 @@ if (regexp.exec(document.location.search)) {
     });  
 }
 
+// обработка ответа, пришедшего от сервера по Ajax
 function treatAjaxServerAnswer(res) {
     // переключаем режим меню
     menu.dataset.state = 'selected';
@@ -229,7 +232,7 @@ function treatAjaxServerAnswer(res) {
     wsGlobal = ws;
 }
 
-    // Возможность загрузки файла изображения
+// Возможность загрузки файла изображения
 const fileInput = document.createElement('input');
 fileInput.setAttribute('type', 'file');
 fileInput.setAttribute('accept', 'image/jpeg, image/png');
@@ -254,10 +257,11 @@ wrap.addEventListener('drop', event => {
 wrap.addEventListener('dragover', event => event.preventDefault());
 
 
-// отправка картинки на сервер и получение данных от сервера
+// отправка файла картинки на сервер и получение данных от сервера
 function publishImage(file) {
     if (!file) return;
 
+    // проверяем тип файла
     function fileTypeIsIncorrect(fileType) {
         let isIncorrect = false;
         fileType.split('/').forEach(type => {
@@ -341,7 +345,7 @@ document.querySelector('.menu_copy').addEventListener('click', () => {
     document.execCommand('copy');
 });
 
-// ~~~~~~~~~~~~~~режим "Комментирование"~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~ Комментирование ~~~~~~~~~~~~~~~
 
 // создаем div, в который будем помещать комментарии (нужно, чтобы координаты комментариев можно было зафиксировать относительно этого div, а не документа, чтобы комментарии не съезжали при изменении окна браузера)
 function createCommentsWrap() {
@@ -426,6 +430,7 @@ function createBlankForm() {
     return newForm;
 }
 
+// удаляем все пустые комментарии, кроме currentForm
 function deleteAllBlankCommentFormsExcept(currentForm = null) {
     Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
         if (form.querySelectorAll('.comment').length < 2 && form !== currentForm) {
@@ -435,6 +440,7 @@ function deleteAllBlankCommentFormsExcept(currentForm = null) {
     });
 }
 
+// сворачиваем все пустые комментарии, кроме currentForm
 function minimizeAllCommentFormsExcept(currentForm = null) {
     Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
         if (form !== currentForm) {
@@ -557,11 +563,10 @@ function insertWSComment(wsComment) {
 
 // ~~~~~~~~~~ Рисование ~~~~~~~~~~~~~~~
 
-// changing color
-
 // убираю ластик
 document.querySelector('.menu__eraser-wrap').style.display = 'none';
 
+// изменение текущего цвета линий
 Array.from(document.querySelectorAll('.menu__color')).forEach(colorInput => {
     colorInput.addEventListener('change', () => {
         if (!colorInput.checked) return;
@@ -569,10 +574,8 @@ Array.from(document.querySelectorAll('.menu__color')).forEach(colorInput => {
     });
 });
 
-
+// задаем все атрибуты холста и вставляем его в DOM
 function createCanvas() {
-    // canvas = document.createElement('canvas');
-
     const width = getComputedStyle(document.querySelector('.current-image')).width.slice(0, -2);
     const height = getComputedStyle(document.querySelector('.current-image')).height.slice(0, -2);
     canvas.width = width;
@@ -597,19 +600,23 @@ let needsRepaint = false;
 let currColor = '#6cbe47';
 let curvesNumberToRemoveNextTime = 0;
 
-// curves and figures
+// --- кривые и фигуры ---
+
+// рисуем точку
 function circle(point) {
     ctx.beginPath();
     ctx.arc(...point, BRUSH_RADIUS / 2, 0, 2 * Math.PI);
     ctx.fill();
 }
 
+// рисуем плавную линию между двумя точками
 function smoothCurveBetween(p1, p2) {
     // Bezier control point
     const cp = p1.map((coord, idx) => (coord + p2[idx]) / 2);
     ctx.quadraticCurveTo(...p1, ...cp);
 }
 
+// рисуем плавную линию между множеством точек
 function smoothCurve(points) {
     ctx.beginPath();
     ctx.lineWidth = BRUSH_RADIUS;
@@ -625,7 +632,9 @@ function smoothCurve(points) {
     ctx.stroke();
 }
 
-// events
+// --- events ---
+
+// задаем координаты точки в виде массива
 function makePoint(x, y) {
     return [x, y];
 }
@@ -635,11 +644,11 @@ canvas.addEventListener('mousedown', event => {
 
     drawing = true;
 
-    const curve = []; // create a new curve
-    curve.color = currColor; // define color of the curve
+    const curve = []; // создаем новую кривую
+    curve.color = currColor; // определяем цвет кривой
 
-    curve.push(makePoint(event.offsetX, event.offsetY)); // add a new point
-    curves.push(curve); // add the curve to the array of curves
+    curve.push(makePoint(event.offsetX, event.offsetY)); // создаем новую точку
+    curves.push(curve); // добавляем кривую curve к массиву кривых curves
     needsRepaint = true;
 });
 
@@ -655,7 +664,7 @@ canvas.addEventListener('mousemove', event => {
     if (draw.dataset.state !== 'selected') return;
 
     if (drawing) {
-        // add a point
+        // добавляем точку
         const point = makePoint(event.offsetX, event.offsetY);
         curves[curves.length - 1].push(point);
         needsRepaint = true;
@@ -665,12 +674,12 @@ canvas.addEventListener('mousemove', event => {
 
 // rendering
 function repaint() {
-    // clear before repainting
+    // очищаем перед перерисовкой
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     curves
         .forEach(curve => {
-            // choose used color
+            // задаем цвет
             ctx.strokeStyle = curve.color;
             ctx.fillStyle = curve.color;
             // first...
@@ -684,6 +693,7 @@ function repaint() {
 const throttleSendImageToServer = throttleImg(sendImageToServer, 2000);
 const debounceSendImageToServer = debounceImg(sendImageToServer, 2000);
 
+// проверяем и при необходимости перерисовываем холст в каждый AnimationFrame
 function tick() {
     if (needsRepaint) {
         repaint();
@@ -699,6 +709,7 @@ tick();
 
 // ~~~~~~~~~~~~~~~~~ Рисование: взаимодействие с сервером ~~~~~~~~~~~~~~~~~~~
 
+// создаем img элемент, через который будем отражать рисунки пользователей, пришедшие с сервера
 function createUserStrokesImgElement() {
     if (!userStrokesImgElement) {
         userStrokesImgElement = document.createElement('img');
@@ -708,6 +719,7 @@ function createUserStrokesImgElement() {
     commentsWrap.appendChild(userStrokesImgElement);
 }
 
+// используем, чтобы посылать данные на сервер не чаще 1 раза в несколько секунд
 function throttleImg(callback, delay) {
     let isWaiting = false;
     return function (...rest) {
@@ -722,6 +734,7 @@ function throttleImg(callback, delay) {
     };
 }
 
+// используем чтобы дослать все оставшиеся данные через несколько секунд простоя
 function debounceImg(callback, delay) {
     let timeout;
     return () => {
@@ -734,6 +747,7 @@ function debounceImg(callback, delay) {
     };
 }
 
+// посылаем рисунки пользователя на сервер
 function sendImageToServer() {
     canvas.toBlob(blob => {
         if (!wsGlobal) return;
@@ -745,6 +759,7 @@ function sendImageToServer() {
     });
 }
 
+// отражаем рисунки пользователей, пришедшие с сервера, в userStrokesImgElement
 function drawUsersStrokes(url) {
     if (!url) return;
     userStrokesImgElement.src = url;

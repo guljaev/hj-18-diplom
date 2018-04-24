@@ -1,7 +1,8 @@
 'use strict';
 
 const wrap = document.querySelector('.wrap');
-wrap.querySelector('.current-image').src = '';
+const currentImage = document.querySelector('.current-image');
+
 const menu = document.querySelector('.menu');
 const burger = document.querySelector('.burger');
 const comments = document.querySelector('.comments');

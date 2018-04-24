@@ -127,12 +127,12 @@ commentsOffInput.addEventListener('change', checkCommentsShow);
 
 function checkCommentsShow() {
     if (commentsOnInput.checked) {
-        Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
+        Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
             form.style.display = '';
         });
         // console.log('comments on');
     } else {
-        Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
+        Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
             form.style.display = 'none';
         });
         // console.log('comments off');
@@ -190,10 +190,10 @@ function treatAjaxServerAnswer(res) {
 
     // сам не смог разобраться с формированием адреса ссылки, и что по ней должно открываться =( где можно почитать про то, из чего формируется адрес, а какие его части можно использовать при открытии страницы?
     const url = document.location.href.split('?')[0] + `?id=${res.id}`;
-    menu.querySelector('.menu__url').value = url;
+    document.querySelector('.menu__url').value = url;
     
     // после загрузки картинки..
-    wrap.querySelector('.current-image').addEventListener('load', () => {
+    document.querySelector('.current-image').addEventListener('load', () => {
         // создаем div по размерам картинки, чтобы вкладывать в него комментарии, canvas и img для отрисовки данных от сервера
         createCommentsWrap();
 
@@ -205,7 +205,7 @@ function treatAjaxServerAnswer(res) {
         updateComments(res.comments);
         drawUsersStrokes(res.mask);
     });
-    wrap.querySelector('.current-image').src = res.url;
+    document.querySelector('.current-image').src = res.url;
     
     // создаем соединение вэбсокет
     const ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${res.id}`);
@@ -239,7 +239,7 @@ fileInput.addEventListener('change', event => {
     const file = event.currentTarget.files[0];
     publishImage(file);
 });
-menu.querySelector('.new').insertBefore(fileInput, menu.querySelector('.new').firstElementChild);
+document.querySelector('.new').insertBefore(fileInput, document.querySelector('.new').firstElementChild);
 
 wrap.addEventListener('drop', event => {
     event.preventDefault();
@@ -336,8 +336,8 @@ modeHTMLElements.forEach(elem => {
 
 // копирование в буфер обмена из режима "Поделиться"
 
-menu.querySelector('.menu_copy').addEventListener('click', () => {
-    menu.querySelector('.menu__url').select();
+document.querySelector('.menu_copy').addEventListener('click', () => {
+    document.querySelector('.menu__url').select();
     document.execCommand('copy');
 });
 
@@ -349,8 +349,8 @@ function createCommentsWrap() {
         commentsWrap = document.createElement('div');
     }
 
-    const width = getComputedStyle(wrap.querySelector('.current-image')).width;
-    const height = getComputedStyle(wrap.querySelector('.current-image')).height;
+    const width = getComputedStyle(document.querySelector('.current-image')).width;
+    const height = getComputedStyle(document.querySelector('.current-image')).height;
 
     commentsWrap.style.width = width;
     commentsWrap.style.height = height;
@@ -361,7 +361,7 @@ function createCommentsWrap() {
         if (event.target.closest('.comments__form')) {
             const currentForm = event.target.closest('.comments__form');
             // отображаем интересующие комментарии (по клику) поверх остальных
-            Array.from(commentsWrap.querySelectorAll('.comments__form')).forEach(form => {
+            Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
                 form.style.zIndex = 10;
             });
             currentForm.style.zIndex = 11;
@@ -377,7 +377,7 @@ function createCommentsWrap() {
 
 // Создаем новый элемент form для комментариев
 function createBlankForm() {
-    const newForm = wrap.querySelector('.comments__form__sample').cloneNode(true);
+    const newForm = document.querySelector('.comments__form__sample').cloneNode(true);
     newForm.classList.remove('comments__form__sample');
     newForm.classList.add('comments__form');
     newForm.style.display = '';
@@ -427,7 +427,7 @@ function createBlankForm() {
 }
 
 function deleteAllBlankCommentFormsExcept(currentForm = null) {
-    Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
+    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
         if (form.querySelectorAll('.comment').length < 2 && form !== currentForm) {
             // если комментариев нет, и выбран не текущий комментарий, удалаем форму
             form.remove();
@@ -436,7 +436,7 @@ function deleteAllBlankCommentFormsExcept(currentForm = null) {
 }
 
 function minimizeAllCommentFormsExcept(currentForm = null) {
-    Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
+    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
         if (form !== currentForm) {
             // если выбран не текущий комментарий, сворачиваем его
             form.querySelector('.comments__marker-checkbox').checked = false;
@@ -481,7 +481,7 @@ function updateComments(newComments) {
         
         shownComments[id] = newComments[id];
         let needCreateNewForm = true;
-        Array.from(wrap.querySelectorAll('.comments__form')).forEach(form => {
+        Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
             // если уже существует форма с заданными координатами left и top, добавляем сообщение в эту форму
             if (+form.dataset.left === shownComments[id].left && +form.dataset.top === shownComments[id].top) {
                 form.querySelector('.loader').parentElement.style.display = 'none';
@@ -560,9 +560,9 @@ function insertWSComment(wsComment) {
 // changing color
 
 // убираю ластик
-menu.querySelector('.menu__eraser-wrap').style.display = 'none';
+document.querySelector('.menu__eraser-wrap').style.display = 'none';
 
-Array.from(menu.querySelectorAll('.menu__color')).forEach(colorInput => {
+Array.from(document.querySelectorAll('.menu__color')).forEach(colorInput => {
     colorInput.addEventListener('change', () => {
         if (!colorInput.checked) return;
         currColor = colorInput.value;
@@ -573,8 +573,8 @@ Array.from(menu.querySelectorAll('.menu__color')).forEach(colorInput => {
 function createCanvas() {
     // canvas = document.createElement('canvas');
 
-    const width = getComputedStyle(wrap.querySelector('.current-image')).width.slice(0, -2);
-    const height = getComputedStyle(wrap.querySelector('.current-image')).height.slice(0, -2);
+    const width = getComputedStyle(document.querySelector('.current-image')).width.slice(0, -2);
+    const height = getComputedStyle(document.querySelector('.current-image')).height.slice(0, -2);
     canvas.width = width;
     canvas.height = height;
 

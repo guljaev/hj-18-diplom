@@ -18,8 +18,8 @@ const errorMessage = document.querySelector('.error__message');
 const errorNode = document.querySelector('.error');
 
 // переключатели отображения комментариев
-const commentsOnInput = document.querySelector('#comments-on');
-const commentsOffInput = document.querySelector('#comments-off');
+const commentsOnInput = document.querySelector('.comments-on');
+const commentsOffInput = document.querySelector('.comments-off');
 
 // ID картинки
 let picID;

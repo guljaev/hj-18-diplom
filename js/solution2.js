@@ -10,7 +10,7 @@ const comments = document.querySelector('.comments');
 const draw = document.querySelector('.draw');
 const share = document.querySelector('.share');
 const menuUrl = document.querySelector('.menu__url');
-const modeHTMLElements = Array.from( document.querySelectorAll('.mode') );
+const modeHTMLElements = document.querySelectorAll('.mode');
 
 // предупреждения и ошибки
 const imageLoader = document.querySelector('.image-loader');
@@ -134,11 +134,11 @@ commentsOffInput.addEventListener('change', checkCommentsShow);
 
 function checkCommentsShow() {
     if (commentsOnInput.checked) {
-        Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+        document.querySelectorAll('.comments__form').forEach(form => {
             form.style.display = ''; //comments on
         });
     } else {
-        Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+        document.querySelectorAll('.comments__form').forEach(form => {
             form.style.display = 'none'; //comments off
         });
     }
@@ -254,7 +254,7 @@ function publishImage(file) {
     })
     .then(res => {
         // стираем комментарии, которые могли остаться от предыдущей картинки
-        Array.from(document.querySelectorAll('.comments__form')).forEach(form => form.remove());
+        document.querySelectorAll('.comments__form').forEach(form => form.remove());
         // стираем следы рисования от предыдущей картинки
         if (userStrokesImgElement) userStrokesImgElement.src = './pic/transparent.png';
 
@@ -344,7 +344,7 @@ if (regexp.exec(document.location.search)) {
 
 // удаляем все пустые комментарии, кроме currentForm
 function deleteAllBlankCommentFormsExcept(currentForm = null) {
-    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+    document.querySelectorAll('.comments__form').forEach(form => {
         if (form.querySelectorAll('.comment').length < 2 && form !== currentForm) {
             // если комментариев нет, и выбран не текущий комментарий, удалаем форму
             form.remove();
@@ -354,7 +354,7 @@ function deleteAllBlankCommentFormsExcept(currentForm = null) {
 
 // сворачиваем все пустые комментарии, кроме currentForm
 function minimizeAllCommentFormsExcept(currentForm = null) {
-    Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+    document.querySelectorAll('.comments__form').forEach(form => {
         if (form !== currentForm) {
             // если выбран не текущий комментарий, сворачиваем его
             form.querySelector('.comments__marker-checkbox').checked = false;
@@ -380,7 +380,7 @@ function createCommentsWrap() {
         if (event.target.closest('.comments__form')) {
             const currentForm = event.target.closest('.comments__form');
             // отображаем интересующие комментарии (по клику) поверх остальных
-            Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+            document.querySelectorAll('.comments__form').forEach(form => {
                 form.style.zIndex = 10;
             });
             currentForm.style.zIndex = 11;
@@ -483,7 +483,7 @@ function updateComments(newComments) {
         
         shownComments[id] = newComments[id];
         let needCreateNewForm = true;
-        Array.from(document.querySelectorAll('.comments__form')).forEach(form => {
+        document.querySelectorAll('.comments__form').forEach(form => {
             // если уже существует форма с заданными координатами left и top, добавляем сообщение в эту форму
             if (+form.dataset.left === shownComments[id].left && +form.dataset.top === shownComments[id].top) {
                 form.querySelector('.loader').parentElement.style.display = 'none';
@@ -536,7 +536,7 @@ function addMsgToForm(newMsg, form) {
     let timestamp = POSITIVE_INFINITY;
     let theNearestLowerDiv = form.querySelector('.loader').parentElement;
 
-    Array.from(form.querySelectorAll('[data-timestamp]')).forEach(msgDiv => {
+    form.querySelectorAll('[data-timestamp]').forEach(msgDiv => {
         if (+msgDiv.dataset.timestamp < newMsg.timestamp) return;
         if (+msgDiv.dataset.timestamp < timestamp) {
             timestamp = +msgDiv.dataset.timestamp;
@@ -576,7 +576,7 @@ function insertWSComment(wsComment) {
 // ~~~~~~~~~~ Рисование ~~~~~~~~~~~~~~~
 
 // изменение текущего цвета линий
-Array.from(document.querySelectorAll('.menu__color')).forEach(colorInput => {
+document.querySelectorAll('.menu__color').forEach(colorInput => {
     colorInput.addEventListener('change', () => {
         if (!colorInput.checked) return;
         currColor = colorInput.value;

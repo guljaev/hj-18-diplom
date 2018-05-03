@@ -534,7 +534,7 @@ function addMsgToForm(newMsg, form) {
     let timestamp = Number.MAX_VALUE;
     let theNearestLowerDiv = form.querySelector('.loader').parentElement;
 
-    form.querySelectorAll('[data-timestamp]').forEach(msgDiv => {
+    form.querySelectorAll('.user__comment').forEach(msgDiv => {
         if (+msgDiv.dataset.timestamp < newMsg.timestamp) return;
         if (+msgDiv.dataset.timestamp < timestamp) {
             timestamp = +msgDiv.dataset.timestamp;
@@ -544,6 +544,7 @@ function addMsgToForm(newMsg, form) {
 
     const newMsgDiv = document.createElement('div');
     newMsgDiv.classList.add('comment');
+    newMsgDiv.classList.add('user__comment');
     newMsgDiv.dataset.timestamp = newMsg.timestamp;
     
     const pCommentTime = document.createElement('p');

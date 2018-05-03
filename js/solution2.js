@@ -515,8 +515,6 @@ function updateComments(newComments) {
 
 // добавляем новое сообщение в форму, так чтобы все сообщения внутри формы шли по порядку возрастания data-timestamp
 function addMsgToForm(newMsg, form) {
-    const POSITIVE_INFINITY = 9999999999999;
-
     // преобразуем timestamp в строку необходимого формата для отображения времени
     function getDate(timestamp) {
         const options = {
@@ -533,7 +531,7 @@ function addMsgToForm(newMsg, form) {
         return dateStr.slice(0, 6) + dateStr.slice(8, 10) + dateStr.slice(11);
     }
 
-    let timestamp = POSITIVE_INFINITY;
+    let timestamp = Number.MAX_VALUE;
     let theNearestLowerDiv = form.querySelector('.loader').parentElement;
 
     form.querySelectorAll('[data-timestamp]').forEach(msgDiv => {

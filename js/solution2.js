@@ -56,56 +56,54 @@ document.addEventListener('mouseup', drop);
 
 // вычисляем сдвиг указателя относительно левого верхнего края меню
 function dragStart(event) {
-    if (event.target.classList.contains('drag')) {
-        movedPiece = menu;
+    if (!event.target.classList.contains('drag')) return;
 
-        const bounds = movedPiece.getBoundingClientRect();
-        
-        shiftX = event.pageX - bounds.left - window.pageXOffset;
-        shiftY = event.pageY - bounds.top - window.pageYOffset;
+    movedPiece = menu;
+    const bounds = movedPiece.getBoundingClientRect();
+    
+    shiftX = event.pageX - bounds.left - window.pageXOffset;
+    shiftY = event.pageY - bounds.top - window.pageYOffset;
 
-        maxX = minX + wrap.offsetWidth - movedPiece.offsetWidth;
-        maxY = minY + wrap.offsetHeight - movedPiece.offsetHeight;
-    }
+    maxX = minX + wrap.offsetWidth - movedPiece.offsetWidth;
+    maxY = minY + wrap.offsetHeight - movedPiece.offsetHeight;
 }
 
 // перемещаем меню в соответствии с движением мыши, учитываем ограничения
 function drag(event) {
-    if (movedPiece) {
-        event.preventDefault();
+    if (!movedPiece) return;
+    
+    event.preventDefault();
 
-        let x = event.pageX - shiftX;
-        let y = event.pageY - shiftY;
+    let x = event.pageX - shiftX;
+    let y = event.pageY - shiftY;
 
-        x = Math.min(x, maxX - 1);
-        y = Math.min(y, maxY);
+    x = Math.min(x, maxX - 1);
+    y = Math.min(y, maxY);
 
-        x = Math.max(x, minX);
-        y = Math.max(y, minY);
+    x = Math.max(x, minX);
+    y = Math.max(y, minY);
 
-        movedPiece.style.left = `${x}px`;
-        movedPiece.style.top = `${y}px`;
-    }
+    movedPiece.style.left = `${x}px`;
+    movedPiece.style.top = `${y}px`;
 }
 
 // заканчиваем движение меню
 function drop() {
-    if (movedPiece) {
-        movedPiece = null;
-    }
+    if (!movedPiece) return; 
+    movedPiece = null;
 }
 
 // используется для ограничения частоты срабатывания функции drag
 function throttle(callback) {
     let isWaiting = false;
     return function (...rest) {
-        if (!isWaiting) {
-            callback.apply(this, rest);
-            isWaiting = true;
-            requestAnimationFrame(() => {
-                isWaiting = false;
-            });
-        }
+        if (isWaiting) return;
+        
+        callback.apply(this, rest);
+        isWaiting = true;
+        requestAnimationFrame(() => {
+            isWaiting = false;
+        });
     };
 }
 
@@ -536,7 +534,7 @@ function addMsgToForm(newMsg, form) {
 
     form.querySelectorAll('.user__comment').forEach(msgDiv => {
         const currMsgTimestamp = +msgDiv.dataset.timestamp;
-        
+
         if (currMsgTimestamp < newMsg.timestamp) return;
         if (currMsgTimestamp < timestamp) {
             timestamp = currMsgTimestamp;
